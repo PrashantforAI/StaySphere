@@ -1,5 +1,9 @@
 
-import { Timestamp } from "firebase/firestore";
+// FIX: Replaced the v9 modular import for Timestamp with the v8 compatibility version.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+
+export type Timestamp = firebase.firestore.Timestamp;
 
 export enum UserRole {
   GUEST = "guest",
@@ -122,7 +126,8 @@ export interface Booking {
 export interface Conversation {
   conversationId: string;
   participants: string[];
-  propertyId: string;
+  propertyId?: string; // Optional for AI chats
+  isAiConversation?: boolean; // Flag for AI chats
   aiSummary?: string;
   status: "active" | "archived";
   createdAt: Timestamp;
@@ -137,4 +142,12 @@ export interface Message {
   attachments?: string[];
   timestamp: Timestamp;
   read: boolean;
+}
+
+export interface PropertySearchFilters {
+  location?: string;
+  guests?: number;
+  amenities?: string[];
+  priceMin?: number;
+  priceMax?: number;
 }

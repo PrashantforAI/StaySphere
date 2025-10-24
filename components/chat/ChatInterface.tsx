@@ -1,8 +1,17 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
+import { extractSearchFiltersFromQuery, generateChatResponse } from '../../services/geminiService';
+// FIX: Corrected typo in function import from getAiConversationMessages to getConversationMessages.
+import { addMessageToConversation, getConversationMessages, getOrCreateAiConversation } from '../../services/firestoreService';
+import { useAuth } from '../../hooks/useAuth';
+import { Message, PropertySearchFilters } from '../../types';
 
-// Defines the structure of a single chat message
+interface ChatInterfaceProps {
+    onAiSearch: (filters: PropertySearchFilters) => void;
+}
+
+// Defines the structure of a single chat message for local state
 interface ChatMessage {
-    text: string;
+    content: string;
     sender: 'user' | 'ai';
 }
 
@@ -12,43 +21,111 @@ const PaperAirplaneIcon = () => (
     </svg>
 );
 
-const ChatInterface: React.FC = () => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch }) => {
+    // FIX: Destructure userProfile to determine the sender's role for chat messages.
+    const { currentUser, userProfile } = useAuth();
     // State to hold the conversation messages
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { text: "Welcome to StaySphere AI! How can I help you plan your perfect vacation today?", sender: 'ai' }
+        { content: "Welcome to StaySphere AI! How can I help you plan your perfect vacation today?", sender: 'ai' }
     ]);
     // State for the user's current input
     const [inputValue, setInputValue] = useState('');
     // State to track if the bot is "thinking"
     const [isTyping, setIsTyping] = useState(false);
+    // State for the Firestore conversation ID
+    const [conversationId, setConversationId] = useState<string | null>(null);
 
     // Ref to the message container for auto-scrolling
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Fetch or create conversation on component mount
+    useEffect(() => {
+        const setupConversation = async () => {
+            if (currentUser) {
+                try {
+                    const convId = await getOrCreateAiConversation(currentUser.uid);
+                    setConversationId(convId);
+                    // FIX: Correctly call the imported function 'getConversationMessages'.
+                    const history = await getConversationMessages(convId);
+                    // Don't override initial welcome message if history is empty
+                    if (history.length > 0) {
+                        setMessages(history.map(m => ({ content: m.content, sender: m.senderType === 'ai' ? 'ai' : 'user' })));
+                    }
+                } catch (error) {
+                    console.error("Error setting up conversation:", error);
+                }
+            }
+        };
+        setupConversation();
+    }, [currentUser]);
 
     // Effect to scroll to the bottom whenever messages change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         const trimmedInput = inputValue.trim();
-        if (!trimmedInput) return;
+        // FIX: Added userProfile to the guard clause to ensure role is available.
+        if (!trimmedInput || !conversationId || !currentUser || !userProfile) return;
 
-        // Add user's message to the chat
-        const userMessage: ChatMessage = { text: trimmedInput, sender: 'user' };
+        const userMessage: ChatMessage = { content: trimmedInput, sender: 'user' };
         setMessages(prev => [...prev, userMessage]);
-        setInputValue(''); // Clear the input field
-
-        // Simulate AI "thinking" then responding
+        setInputValue('');
         setIsTyping(true);
-        setTimeout(() => {
-            // This is a simple "echo bot". It just repeats the user's message.
-            // In the future, this is where you would call the Gemini API.
-            const aiResponse: ChatMessage = { text: `You said: "${trimmedInput}"`, sender: 'ai' };
-            setMessages(prev => [...prev, aiResponse]);
+
+        // FIX: Determine the correct senderType based on user role. 'user' is not a valid senderType.
+        // Default to 'guest' for any role that isn't 'host'.
+        const userSenderType = userProfile.role === 'host' ? 'host' : 'guest';
+
+        // Save user message to Firestore
+        await addMessageToConversation(conversationId, {
+            senderId: currentUser.uid,
+            senderType: userSenderType,
+            content: trimmedInput,
+            read: false,
+        });
+        
+        // Create a history snapshot for the Gemini API call
+        // FIX: Map the local sender type 'user' to a valid Message senderType ('guest' or 'host').
+        const fullHistoryForGemini: Message[] = [...messages, userMessage].map(m => ({
+            content: m.content,
+            senderType: m.sender === 'user' ? userSenderType : 'ai',
+        } as Message));
+
+        try {
+            // First, try to extract search filters
+            const filters = await extractSearchFiltersFromQuery(trimmedInput);
+            let aiResponseText: string;
+
+            if (filters) {
+                // If filters are found, trigger the search in the parent component
+                onAiSearch(filters);
+                aiResponseText = "Great! I've updated the property list based on your request. Let me know if you'd like to make any other changes.";
+            } else {
+                // If no filters are found, get a general conversational response
+                aiResponseText = await generateChatResponse(fullHistoryForGemini);
+            }
+            
+            const aiMessage: ChatMessage = { content: aiResponseText, sender: 'ai' };
+            setMessages(prev => [...prev, aiMessage]);
+
+            // Save AI response to Firestore
+            await addMessageToConversation(conversationId, {
+                senderId: 'ai',
+                senderType: 'ai',
+                content: aiResponseText,
+                read: true,
+            });
+
+        } catch (error) {
+            console.error("Error handling chat submit:", error);
+            const errorMessage: ChatMessage = { content: "Sorry, I'm having trouble connecting right now. Please try again in a moment.", sender: 'ai' };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
             setIsTyping(false);
-        }, 1000); // 1-second delay to simulate thinking
+        }
     };
 
   return (
@@ -68,14 +145,18 @@ const ChatInterface: React.FC = () => {
                     ? 'bg-primary-100 dark:bg-primary-900/50'
                     : 'bg-white dark:bg-gray-700'
                 }`}>
-                <p className="text-sm">{message.text}</p>
+                <p className="text-sm">{message.content}</p>
               </div>
             </div>
           ))}
           {isTyping && (
             <div className="flex items-start">
               <div className="p-3 rounded-lg bg-primary-100 dark:bg-primary-900/50">
-                <p className="text-sm italic">AI is typing...</p>
+                  <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" style={{animationDelay: '200ms'}}></div>
+                      <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" style={{animationDelay: '400ms'}}></div>
+                  </div>
               </div>
             </div>
           )}
@@ -94,8 +175,9 @@ const ChatInterface: React.FC = () => {
             placeholder="Type your message..."
             className="flex-grow p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
             disabled={isTyping}
+            aria-label="Chat input"
           />
-          <button type="submit" className="p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50" disabled={isTyping || !inputValue.trim()}>
+          <button type="submit" className="p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50" disabled={isTyping || !inputValue.trim()} aria-label="Send message">
             <PaperAirplaneIcon />
           </button>
         </form>

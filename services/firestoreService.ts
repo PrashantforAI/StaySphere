@@ -2,7 +2,7 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from './firebase';
-import { UserProfile, UserRole, Property, Booking } from '../types';
+import { UserProfile, UserRole, Property, Booking, Message } from '../types';
 
 /**
  * Creates a new user profile document in the Firestore 'users' collection.
@@ -63,56 +63,69 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
   }
 };
 
-// =================================================================
-// Stubs for Future CRUD Operations
-// =================================================================
-
 /**
- * (STUB) Creates a new property document in Firestore.
- * @param propertyData - The data for the new property.
+ * Fetches or creates a dedicated AI conversation for a user.
+ * @param userId - The ID of the user.
+ * @returns The ID of the conversation.
  */
-// export const createProperty = async (propertyData: Omit<Property, 'propertyId' | 'createdAt' | 'updatedAt' | 'hostId'>, hostId: string): Promise<void> => {
-//   try {
-//     await db.collection('properties').add({
-//       ...propertyData,
-//       hostId,
-//       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-//       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-//     });
-//   } catch (error) {
-//     console.error("Error creating property:", error);
-//     throw error;
-//   }
-// };
+export const getOrCreateAiConversation = async (userId: string): Promise<string> => {
+  const conversationCollection = db.collection('conversations');
+  // Add a flag to identify AI chats
+  const q = conversationCollection
+    .where('participants', 'array-contains', userId)
+    .where('isAiConversation', '==', true);
+
+  const snapshot = await q.get();
+  
+  if (!snapshot.empty) {
+    // Conversation already exists
+    return snapshot.docs[0].id;
+  } else {
+    // Create a new conversation
+    const newConversationRef = await conversationCollection.add({
+      participants: [userId, 'ai'],
+      isAiConversation: true,
+      status: 'active',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    return newConversationRef.id;
+  }
+};
 
 /**
- * (STUB) Creates a new booking document in Firestore.
- * @param bookingData - The data for the new booking.
+ * Adds a message to a conversation and updates the last message timestamp.
+ * @param conversationId - The ID of the conversation.
+ * @param message - The message object to add.
  */
-// export const createBooking = async (bookingData: Omit<Booking, 'bookingId' | 'createdAt' | 'updatedAt'>): Promise<void> => {
-//   try {
-//     await db.collection('bookings').add({
-//       ...bookingData,
-//       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-//       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-//     });
-//   } catch (error) {
-//     console.error("Error creating booking:", error);
-//     throw error;
-//   }
-// };
-
+export const addMessageToConversation = async (conversationId: string, message: Omit<Message, 'messageId' | 'timestamp' | 'attachments'>): Promise<void> => {
+  const conversationRef = db.collection('conversations').doc(conversationId);
+  const messagesCollection = conversationRef.collection('messages');
+  const batch = db.batch();
+  
+  const messageRef = messagesCollection.doc();
+  batch.set(messageRef, {
+      ...message,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  
+  batch.update(conversationRef, {
+      lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  
+  await batch.commit();
+};
 
 /**
- * (STUB) Fetches messages for a given conversation.
+ * Fetches messages for a given conversation, ordered by timestamp.
  * @param conversationId - The ID of the conversation.
  */
-// export const getConversationMessages = async (conversationId: string) => {
-//   try {
-//     const messagesSnapshot = await db.collection('conversations').doc(conversationId).collection('messages').orderBy('timestamp').get();
-//     return messagesSnapshot.docs.map(doc => doc.data());
-//   } catch (error) {
-//     console.error("Error fetching messages:", error);
-//     throw error;
-//   }
-// };
+export const getConversationMessages = async (conversationId: string): Promise<Message[]> => {
+  try {
+    const messagesSnapshot = await db.collection('conversations').doc(conversationId).collection('messages').orderBy('timestamp', 'asc').get();
+    return messagesSnapshot.docs.map(doc => ({ messageId: doc.id, ...doc.data() } as Message));
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    throw error;
+  }
+};
