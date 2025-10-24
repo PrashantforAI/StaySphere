@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -11,6 +10,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ROUTES } from './constants';
 import { isFirebaseConfigured } from './services/firebase';
 import FirebaseConfigNotice from './components/setup/FirebaseConfigNotice';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 const App: React.FC = () => {
 
@@ -19,25 +19,27 @@ const App: React.FC = () => {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <HashRouter>
-          <Routes>
-            <Route path={ROUTES.HOME} element={<HomePage />} />
-            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-            <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-            <Route 
-              path={ROUTES.DASHBOARD}
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
-        </HashRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <HashRouter>
+            <Routes>
+              <Route path={ROUTES.HOME} element={<HomePage />} />
+              <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+              <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+              <Route 
+                path={ROUTES.DASHBOARD}
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </HashRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

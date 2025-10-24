@@ -1,12 +1,14 @@
-
 import React, { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
+// FIX: Updated Firebase imports to use the v8 compatibility API.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import { auth } from '../services/firebase';
 import { UserProfile } from '../types';
+import { getUserProfile } from '../services/firestoreService';
 
 interface AuthContextType {
-  currentUser: User | null;
+  // FIX: Used firebase.User type from the compatibility library.
+  currentUser: firebase.User | null;
   userProfile: UserProfile | null;
   loading: boolean;
 }
@@ -18,22 +20,22 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // FIX: Used firebase.User type from the compatibility library.
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    // FIX: Switched to the onAuthStateChanged method from the auth service object.
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
       if (user) {
-        // Fetch user profile from Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as UserProfile);
-        } else {
-          // Handle case where user exists in Auth but not Firestore
-          console.error("User profile not found in Firestore.");
+        try {
+          // Fetch user profile from Firestore using the centralized service
+          const profile = await getUserProfile(user.uid);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error);
           setUserProfile(null);
         }
       } else {

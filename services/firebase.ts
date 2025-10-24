@@ -1,7 +1,7 @@
 
-import { initializeApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 
 // =================================================================
 // IMPORTANT: FIREBASE CONFIGURATION
@@ -27,10 +27,10 @@ export const isFirebaseConfigured = !firebaseConfig.apiKey.startsWith("PASTE_YOU
 // Initialize Firebase
 // This will throw an error if the config is invalid once used. Check your browser's
 // developer console for details if the app fails to load after configuration.
-const app: FirebaseApp = initializeApp(firebaseConfig);
+const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
 
 // Export Firebase services
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
+export const auth = firebase.auth();
+export const db = firebase.firestore();
 
 export default app;

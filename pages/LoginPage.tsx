@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+// FIX: Removed modular import for signInWithEmailAndPassword, as it will be called as a method on the auth object.
 import { auth } from '../services/firebase';
 import { ROUTES } from '../constants';
 import Header from '../components/layout/Header';
@@ -19,7 +19,8 @@ const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // FIX: Switched to the v8 compat API style: auth.signInWithEmailAndPassword()
+      await auth.signInWithEmailAndPassword(email, password);
       navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
       if (err.code === 'auth/invalid-api-key' || err.code === 'auth/api-key-not-valid') {

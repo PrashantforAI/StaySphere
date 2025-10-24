@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
+// FIX: Removed modular import for signOut, as it will be called as a method on the auth object.
 import { auth } from '../../services/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -16,7 +16,8 @@ const LeftPanel: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      // FIX: Switched to the v8 compat API style: auth.signOut()
+      await auth.signOut();
       navigate(ROUTES.HOME);
     } catch (error) {
       console.error("Error logging out:", error);

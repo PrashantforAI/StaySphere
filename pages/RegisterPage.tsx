@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
+// FIX: Removed modular imports for auth functions, as they will be called as methods on the auth/user objects.
+import { auth } from '../services/firebase';
+import { createUserProfile } from '../services/firestoreService';
 import { ROUTES } from '../constants';
 import { UserRole } from '../types';
 import Header from '../components/layout/Header';
@@ -22,37 +21,52 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     setError('');
 
+    if (!displayName || !email || !password) {
+      setError("All fields are required.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // 1. Create user in Firebase Auth
+      // FIX: Switched to the v8 compat API style: auth.createUserWithEmailAndPassword()
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
       const user = userCredential.user;
 
-      await updateProfile(user, { displayName });
+      if (!user) {
+        throw new Error("User creation failed.");
+      }
 
-      // Create user profile in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        userId: user.uid,
-        email: user.email,
-        displayName,
-        role,
-        verificationStatus: false,
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp(),
-        preferences: {
-          language: 'en',
-          currency: 'INR',
-        },
-      });
+      // 2. Update Auth user's display name
+      // FIX: Switched to the v8 compat API style: user.updateProfile()
+      await user.updateProfile({ displayName });
+
+      // 3. Create user profile in Firestore using the centralized service
+      await createUserProfile(user, { displayName, role });
 
       navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
       if (err.code === 'auth/invalid-api-key' || err.code === 'auth/api-key-not-valid') {
         setError('Firebase configuration error. The API key is invalid. Please check the setup instructions.');
-      } else {
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('This email address is already in use by another account.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('The password is too weak. It should be at least 6 characters long.');
+      }
+      else {
         setError(err.message);
       }
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Helper function to get button styles
+  const getButtonClass = (buttonRole: UserRole) => {
+    const baseClasses = 'flex-1 px-4 py-2 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-primary-500';
+    const activeClasses = 'bg-primary-600 text-white';
+    const inactiveClasses = 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600';
+    return `${baseClasses} ${role === buttonRole ? activeClasses : inactiveClasses}`;
   };
 
   return (
@@ -83,12 +97,15 @@ const RegisterPage: React.FC = () => {
                     </div>
                     <div className="mb-6">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">I am a...</label>
-                        <div className="flex rounded-md shadow-sm">
-                            <button type="button" onClick={() => setRole(UserRole.GUEST)} className={`flex-1 px-4 py-2 text-sm font-medium rounded-l-md focus:z-10 focus:ring-2 focus:ring-primary-500 ${role === UserRole.GUEST ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'}`}>
+                        <div className="flex rounded-md shadow-sm" role="group">
+                            <button type="button" onClick={() => setRole(UserRole.GUEST)} className={`${getButtonClass(UserRole.GUEST)} rounded-l-md`}>
                                 Guest
                             </button>
-                            <button type="button" onClick={() => setRole(UserRole.HOST)} className={`flex-1 px-4 py-2 text-sm font-medium rounded-r-md focus:z-10 focus:ring-2 focus:ring-primary-500 ${role === UserRole.HOST ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'}`}>
+                            <button type="button" onClick={() => setRole(UserRole.HOST)} className={`${getButtonClass(UserRole.HOST)} border-l border-r border-gray-300 dark:border-gray-600`}>
                                 Host
+                            </button>
+                             <button type="button" onClick={() => setRole(UserRole.SERVICE_PROVIDER)} className={`${getButtonClass(UserRole.SERVICE_PROVIDER)} rounded-r-md`}>
+                                Service Provider
                             </button>
                         </div>
                     </div>
