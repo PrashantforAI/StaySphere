@@ -12,12 +12,12 @@ import { getFirestore, Firestore } from "firebase/firestore";
 //
 // The app will not work until you configure this correctly.
 const firebaseConfig = {
-  apiKey: "PASTE_YOUR_FIREBASE_API_KEY_HERE",
-  authDomain: "PASTE_YOUR_FIREBASE_AUTH_DOMAIN_HERE",
-  projectId: "PASTE_YOUR_FIREBASE_PROJECT_ID_HERE",
-  storageBucket: "PASTE_YOUR_FIREBASE_STORAGE_BUCKET_HERE",
-  messagingSenderId: "PASTE_YOUR_FIREBASE_MESSAGING_SENDER_ID_HERE",
-  appId: "PASTE_YOUR_FIREBASE_APP_ID_HERE",
+  apiKey: "AIzaSyDrj9qK-grctKlifciy7M4T4iF24kkUhhk",
+  authDomain: "staysphere-82b5d.firebaseapp.com",
+  projectId: "staysphere-82b5d",
+  storageBucket: "staysphere-82b5d.firebasestorage.app",
+  messagingSenderId: "510917404947",
+  appId: "1:510917404947:web:2b1d1af311cd4967df52e6",
 };
 
 // Check if the configuration is still using placeholder values.
