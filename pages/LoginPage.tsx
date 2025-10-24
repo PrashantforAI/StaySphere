@@ -22,7 +22,11 @@ const LoginPage: React.FC = () => {
       await signInWithEmailAndPassword(auth, email, password);
       navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
-      setError(err.message);
+      if (err.code === 'auth/invalid-api-key' || err.code === 'auth/api-key-not-valid') {
+        setError('Firebase configuration error. The API key is invalid. Please check the setup instructions.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

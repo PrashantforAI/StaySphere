@@ -2,13 +2,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { Message } from '../types';
 
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
-
-if (!API_KEY) {
-  throw new Error("Missing Gemini API Key");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// The Gemini API key is obtained from the environment variable `process.env.API_KEY`.
+// This is pre-configured and accessible in the execution environment as per project guidelines.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateConversationSummary = async (messages: Message[]): Promise<string> => {
   if (messages.length === 0) {

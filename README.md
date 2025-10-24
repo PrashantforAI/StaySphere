@@ -55,28 +55,32 @@ This project requires a Firebase project to handle authentication, database, and
 4.  Choose a location for your database (e.g., `asia-south1`).
 5.  Click **"Enable"**.
 
-### 5. Configure Environment Variables
+### 5. Configure Firebase Credentials
 
-This application expects your Firebase config to be available as environment variables.
+To connect the application to your Firebase project, you need to add your project's credentials directly into the source code.
 
-1.  In the root of your project, create a file named `.env` (this is ignored by Git).
-2.  Paste your copied `firebaseConfig` object into this file, formatting it as follows:
+1.  Open the file `services/firebase.ts`.
+2.  You will see a `firebaseConfig` object with placeholder values (e.g., `"PASTE_YOUR_FIREBASE_API_KEY_HERE"`).
+3.  Replace these placeholders with the actual credentials you copied from your Firebase project settings.
 
+```javascript
+// In services/firebase.ts
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY", // <--- REPLACE
+  authDomain: "YOUR_AUTH_DOMAIN", // <--- REPLACE
+  projectId: "YOUR_PROJECT_ID", // <--- REPLACE
+  storageBucket: "YOUR_STORAGE_BUCKET", // <--- REPLACE
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <--- REPLACE
+  appId: "YOUR_APP_ID", // <--- REPLACE
+};
 ```
-# .env file
 
-REACT_APP_FIREBASE_API_KEY="AIzaSy..."
-REACT_APP_FIREBASE_AUTH_DOMAIN="your-project-id.firebaseapp.com"
-REACT_APP_FIREBASE_PROJECT_ID="your-project-id"
-REACT_APP_FIREBASE_STORAGE_BUCKET="your-project-id.appspot.com"
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID="1234567890"
-REACT_APP_FIREBASE_APP_ID="1:1234567890:web:..."
+**IMPORTANT:** The application will display a setup guide page instead of the main app until these credentials are correctly configured.
 
-# Add your Gemini API Key here
-REACT_APP_GEMINI_API_KEY="your-gemini-api-key"
-```
+### Gemini API Key
 
-**Note:** The application code is set up to read these `REACT_APP_` variables. In a real build setup (like Create React App), these are automatically embedded. In this environment, we simulate it.
+The Google Gemini API key is handled separately. It is expected to be provided to the application's environment as `process.env.API_KEY`. You do not need to configure this in the code.
 
 ---
 
@@ -99,3 +103,17 @@ REACT_APP_GEMINI_API_KEY="your-gemini-api-key"
 3.  Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits. You will also see any lint errors in the console.
+
+---
+
+## Troubleshooting
+
+### Firebase: Error (auth/invalid-api-key) or (auth/api-key-not-valid)
+
+This error typically appears when you try to log in or register after providing incorrect credentials in the `firebase.ts` file.
+
+**Solution:**
+
+1.  **Double-check your credentials:** Carefully copy the `firebaseConfig` object from your Firebase project settings (Project settings > General > Your apps > Firebase SDK snippet > Config).
+2.  **Paste correctly:** Ensure you have replaced **all** the placeholder values in `services/firebase.ts`.
+3.  **No extra characters:** Make sure there are no typos or extra spaces in the keys you pasted.

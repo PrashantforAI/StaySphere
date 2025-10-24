@@ -9,8 +9,15 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ROUTES } from './constants';
+import { isFirebaseConfigured } from './services/firebase';
+import FirebaseConfigNotice from './components/setup/FirebaseConfigNotice';
 
 const App: React.FC = () => {
+
+  if (!isFirebaseConfigured) {
+    return <FirebaseConfigNotice />;
+  }
+
   return (
     <ThemeProvider>
       <AuthProvider>
