@@ -70,6 +70,12 @@ const PropertyDetailPage: React.FC = () => {
   
   if (!property) return null;
 
+  // Using OpenStreetMap to avoid Google Maps API key issues.
+  const { lat, lng } = property.location.coordinates;
+  const bboxPadding = 0.008; // This value controls the zoom level.
+  const bbox = `${lng - bboxPadding},${lat - bboxPadding},${lng + bboxPadding},${lat + bboxPadding}`;
+  const osmEmbedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <Header />
@@ -127,19 +133,21 @@ const PropertyDetailPage: React.FC = () => {
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <ReviewsSection reviews={property.reviews} averageRating={property.ratings.average} />
             
-            {/* Google Maps Embed */}
+            {/* OpenStreetMap Embed */}
             <div>
                  <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Location</h2>
+                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 -mt-3">
+                    Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">OpenStreetMap</a> contributors.
+                 </p>
                  <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-lg">
                     <iframe 
-                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.API_KEY}&q=${property.location.coordinates.lat},${property.location.coordinates.lng}`}
+                        src={osmEmbedUrl}
                         width="100%"
                         height="100%"
                         style={{ border: 0 }}
-                        allowFullScreen={false}
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
-                        title="Property Location"
+                        title="Property Location on OpenStreetMap"
                     ></iframe>
                  </div>
             </div>
