@@ -1,4 +1,4 @@
-import { Booking, BookingStatus, PaymentStatus, Property, Review } from "../types";
+import { Booking, BookingStatus, PaymentStatus, Property, Review, Notification, PaymentHistory } from "../types";
 
 // Dummy host profiles
 const dummyHosts = {
@@ -197,5 +197,65 @@ export const dummyBookings: Booking[] = [
         // FIX: Used PaymentStatus enum instead of string literal.
         payment: { status: PaymentStatus.PAID, amount: 117990, currency: 'INR' },
         createdAt: {} as any, updatedAt: {} as any
+    }
+];
+
+export const dummyNotifications: Notification[] = [
+    {
+        notificationId: 'notif001',
+        userId: 'host@staysphere.com',
+        title: 'New Booking Request!',
+        message: `You have a new request for 'Modern City Apartment'.`,
+        type: 'new_booking',
+        referenceId: 'book004',
+        isRead: false,
+        createdAt: { seconds: new Date().getTime() / 1000 - 3600, nanoseconds: 0 } as any
+    },
+    {
+        notificationId: 'notif002',
+        userId: 'guest@staysphere.com',
+        title: 'Booking Confirmed!',
+        message: `Your booking for 'Serene Beachfront Villa' is confirmed.`,
+        type: 'booking_confirmed',
+        referenceId: 'book001',
+        isRead: false,
+        createdAt: { seconds: new Date().getTime() / 1000 - 86400, nanoseconds: 0 } as any
+    },
+    {
+        notificationId: 'notif003',
+        userId: 'host@staysphere.com',
+        title: 'Payout Processed',
+        message: 'A payout of ₹58,386 for 1 booking has been sent.',
+        type: 'payout_processed',
+        referenceId: 'book002',
+        isRead: true,
+        createdAt: { seconds: new Date().getTime() / 1000 - 2592000, nanoseconds: 0 } as any
+    }
+];
+
+export const dummyPaymentHistory: PaymentHistory[] = [
+    {
+        invoiceId: 'inv_20240701',
+        date: { seconds: new Date('2024-07-01').getTime() / 1000, nanoseconds: 0 } as any,
+        amount: 2999,
+        paymentMethod: 'UPI',
+        status: 'Paid',
+        description: 'Pro Plan - July 2024'
+    },
+    {
+        invoiceId: 'inv_20240601',
+        date: { seconds: new Date('2024-06-01').getTime() / 1000, nanoseconds: 0 } as any,
+        amount: 2999,
+        paymentMethod: 'UPI',
+        status: 'Paid',
+        description: 'Pro Plan - June 2024'
+    },
+    {
+        invoiceId: 'inv_20240501',
+        date: { seconds: new Date('2024-05-01').getTime() / 1000, nanoseconds: 0 } as any,
+        amount: 2999,
+        paymentMethod: 'UPI',
+        status: 'Paid',
+        description: 'Pro Plan - May 2024'
     }
 ];

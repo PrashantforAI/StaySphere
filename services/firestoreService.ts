@@ -2,8 +2,8 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from './firebase';
-import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus } from '../types';
-import { dummyProperties, dummyBookings } from '../data/dummyData';
+import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus, Notification, PaymentHistory } from '../types';
+import { dummyProperties, dummyBookings, dummyNotifications, dummyPaymentHistory } from '../data/dummyData';
 
 /**
  * Creates a new user profile document in the Firestore 'users' collection.
@@ -130,6 +130,49 @@ export const getConversationMessages = async (conversationId: string): Promise<M
     throw error;
   }
 };
+
+/**
+ * Fetches notifications for a given user, ordered by creation date.
+ * NOTE: This currently simulates a DB fetch using local dummy data.
+ * @param userId The user ID to fetch notifications for.
+ * @returns A promise that resolves to an array of Notification objects.
+ */
+export const getUserNotifications = async (userId: string): Promise<Notification[]> => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    // In a real app, you'd fetch from Firestore and filter by userId
+    const userNotifications = dummyNotifications.filter(n => n.userId === 'host@staysphere.com' || n.userId === 'guest@staysphere.com');
+    return userNotifications.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+};
+
+/**
+ * Marks a single notification as read.
+ * NOTE: This currently simulates a DB update using local dummy data.
+ * @param notificationId The ID of the notification to update.
+ */
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+    const notif = dummyNotifications.find(n => n.notificationId === notificationId);
+    if (notif) {
+        notif.isRead = true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 50));
+    console.log(`[SIMULATION] Marked notification ${notificationId} as read.`);
+    /*
+    In a real app, you would run:
+    await db.collection('notifications').doc(notificationId).update({ isRead: true });
+    */
+};
+
+/**
+ * Fetches payment history for a user.
+ * NOTE: This currently simulates a DB fetch using local dummy data.
+ * @param userId The user ID to fetch payment history for.
+ * @returns A promise that resolves to an array of PaymentHistory objects.
+ */
+export const getPaymentHistory = async (userId: string): Promise<PaymentHistory[]> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return dummyPaymentHistory;
+};
+
 
 // =================================================================
 // BOOKING-RELATED FIRESTORE FUNCTIONS

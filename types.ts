@@ -182,7 +182,7 @@ export interface Notification {
     userId: string; // The user who should see this notification
     title: string;
     message: string;
-    type: "new_booking" | "booking_confirmed" | "booking_cancelled" | "review_request";
+    type: "new_booking" | "booking_confirmed" | "booking_cancelled" | "review_request" | "payout_processed";
     referenceId: string; // e.g., bookingId
     isRead: boolean;
     createdAt: Timestamp;
@@ -204,4 +204,14 @@ export interface PropertySearchFilters {
   isPetFriendly?: boolean;
   isVegAllowed?: boolean;
   isNonVegAllowed?: boolean;
+}
+
+export interface PaymentHistory {
+    invoiceId: string;
+    date: Timestamp;
+    amount: number;
+    paymentMethod: string; // e.g., 'UPI', 'Credit Card **** 1234'
+    status: 'Paid' | 'Failed';
+    description: string; // e.g., 'Pro Plan - Monthly Subscription'
+    downloadUrl?: string; // Link to a PDF invoice
 }

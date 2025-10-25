@@ -72,3 +72,20 @@ export const onBookingCancelled = async (booking: Booking, cancelledBy: 'guest' 
     });
     console.log(`[Notification Stub] Sent 'booking_cancelled' notification to user ${recipientId}`);
 };
+
+/**
+ * Sends notifications when a host payout is processed.
+ * @param hostId The ID of the host who received the payout.
+ * @param amount The amount of the payout.
+ * @param bookingIds The list of booking IDs included in this payout.
+ */
+export const onPayoutProcessed = async (hostId: string, amount: number, bookingIds: string[]): Promise<void> => {
+    await createNotification({
+        userId: hostId,
+        title: 'Payout Sent!',
+        message: `A payout of ₹${amount.toLocaleString('en-IN')} for ${bookingIds.length} bookings has been sent.`,
+        type: 'payout_processed',
+        referenceId: bookingIds.length > 0 ? bookingIds[0] : '', // Reference the first booking.
+    });
+    console.log(`[Notification Stub] Sent 'payout_processed' notification to host ${hostId}`);
+};
