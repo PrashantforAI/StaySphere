@@ -1,4 +1,3 @@
-
 // FIX: Replaced the v9 modular import for Timestamp with the v8 compatibility version.
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
@@ -146,7 +145,13 @@ export interface Message {
 
 export interface PropertySearchFilters {
   location?: string;
-  guests?: number;
+  guests?: {
+    adults: number;
+    kids: number;
+    infants: number;
+  };
+  checkIn?: string; // Stored as YYYY-MM-DD
+  checkOut?: string; // Stored as YYYY-MM-DD
   amenities?: string[];
   priceMin?: number;
   priceMax?: number;

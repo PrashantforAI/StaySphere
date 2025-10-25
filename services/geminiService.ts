@@ -40,15 +40,15 @@ export const extractSearchFiltersFromQuery = async (query: string): Promise<Prop
     const model = 'gemini-2.5-flash';
     const systemInstruction = `You are a helpful assistant for a vacation rental website in India called StaySphere.
 Your task is to identify and extract property search criteria from the user's message.
-The criteria include location, number of guests, and specific amenities.
+The criteria include location, check-in/check-out dates, number of guests (adults, kids, infants), and specific amenities.
 If the user's message seems like a search query, respond with a JSON object containing the extracted filters.
 If the message is just a general greeting or question (e.g., "hello", "how are you?", "what can you do?"), respond with an empty JSON object.
 
-Example: "Find me a villa in Lonavala for 6 people with a swimming pool"
-Should result in: { "location": "Lonavala", "guests": 6, "amenities": ["swimming pool"] }
+Example: "Find me a villa in Lonavala for 4 adults and 2 kids with a swimming pool from May 1 to May 5"
+Should result in: { "location": "Lonavala", "guests": { "adults": 4, "kids": 2 }, "amenities": ["swimming pool"], "checkIn": "YYYY-05-01", "checkOut": "YYYY-05-05" } (use the current year for YYYY if not specified).
 
-Example: "I need a place in Goa"
-Should result in: { "location": "Goa" }
+Example: "I need a place in Goa for 2 people"
+Should result in: { "location": "Goa", "guests": { "adults": 2 } }
 
 Example: "hello there"
 Should result in: {}
@@ -58,7 +58,17 @@ Should result in: {}
         type: Type.OBJECT,
         properties: {
             location: { type: Type.STRING, description: 'The city, state, or area the user wants to search in.' },
-            guests: { type: Type.INTEGER, description: 'The number of guests.' },
+            checkIn: { type: Type.STRING, description: 'The check-in date in YYYY-MM-DD format.' },
+            checkOut: { type: Type.STRING, description: 'The check-out date in YYYY-MM-DD format.' },
+            guests: {
+                type: Type.OBJECT,
+                description: 'The number of guests, broken down by age.',
+                properties: {
+                    adults: { type: Type.INTEGER, description: 'Number of adults (age 18+).' },
+                    kids: { type: Type.INTEGER, description: 'Number of kids (age 5-12).' },
+                    infants: { type: Type.INTEGER, description: 'Number of infants (below 5).' },
+                }
+            },
             amenities: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },

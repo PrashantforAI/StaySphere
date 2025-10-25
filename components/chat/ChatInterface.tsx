@@ -7,6 +7,7 @@ import { Message, PropertySearchFilters } from '../../types';
 
 interface ChatInterfaceProps {
     onAiSearch: (filters: PropertySearchFilters) => void;
+    showHeader?: boolean; // New prop to control header visibility
 }
 
 // Defines the structure of a single chat message for local state
@@ -21,7 +22,7 @@ const PaperAirplaneIcon = () => (
     </svg>
 );
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = true }) => {
     // FIX: Destructure userProfile to determine the sender's role for chat messages.
     const { currentUser, userProfile } = useAuth();
     // State to hold the conversation messages
@@ -130,10 +131,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch }) => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <h2 className="font-bold text-lg">AI Assistant</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Ask me anything about your trip!</p>
-      </header>
+      {showHeader && (
+        <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <h2 className="font-bold text-lg">AI Assistant</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Ask me anything about your trip!</p>
+        </header>
+      )}
       
       {/* Message display area */}
       <div className="flex-grow p-4 overflow-y-auto">

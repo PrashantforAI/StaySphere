@@ -7,8 +7,7 @@ import ChatInterface from '../components/chat/ChatInterface';
 import { PropertySearchFilters } from '../types';
 import { dummyProperties } from '../data/dummyData';
 
-const ChatIcon = () => <svg xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.76 9.76 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.455.09-.934.09-1.425v-2.134c0-2.639 2.11-4.75 4.75-4.75h4.134c2.64 0 4.75 2.111 4.75 4.75Z" /></svg>
-const CloseIcon = () => <svg xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
 
 const DashboardPage: React.FC = () => {
   // State to manage which view is shown on mobile
@@ -37,8 +36,16 @@ const DashboardPage: React.FC = () => {
 
         // Guests filter
         if (filters.guests) {
-            properties = properties.filter(p => p.guests >= filters.guests!);
+            // Infants are typically not counted towards property capacity.
+            const totalGuests = (filters.guests.adults || 0) + (filters.guests.kids || 0);
+            if(totalGuests > 0) {
+               properties = properties.filter(p => p.guests >= totalGuests);
+            }
         }
+        
+        // Date filtering can be added here once dummy data supports availability
+        // For example:
+        // if (filters.checkIn && filters.checkOut) { ... }
 
         // Amenities filter (checks if all requested amenities are present)
         if (filters.amenities && filters.amenities.length > 0) {
@@ -72,10 +79,11 @@ const DashboardPage: React.FC = () => {
   const handleModeToggle = () => {
     if (searchMode === 'ai') {
         setSearchMode('manual');
-        // Reset filters when switching to manual to avoid confusion
-        setFilters({});
+        setFilters({}); // Reset filters when switching to manual
     } else {
-        // If on mobile, open chat. On desktop, user can just click chat panel.
+        setSearchMode('ai');
+        setFilters({}); // Clear manual filters to let AI take over
+        // On mobile, also open the chat modal so the user can talk to the AI
         if (window.innerWidth < 768) {
             setIsChatOpen(true);
         }
@@ -93,9 +101,6 @@ const DashboardPage: React.FC = () => {
             isLoading={isLoading}
             onModeToggle={handleModeToggle}
         />;
-      case 'inbox':
-        // For mobile, we show the full AI chat as the "inbox"
-        return <ChatInterface onAiSearch={handleAiSearch} />;
       case 'profile':
         // On mobile, the LeftPanel can serve as the profile view
         return <LeftPanel />;
@@ -142,19 +147,27 @@ const DashboardPage: React.FC = () => {
         </div>
         
         {/* Bottom navigation bar */}
-        <MobileNav activeView={mobileView} onNavigate={setMobileView} />
+        <MobileNav activeView={mobileView} onNavigate={setMobileView} onChatClick={() => setIsChatOpen(true)} />
 
-        {/* Floating Action Button (FAB) for chat, hidden if inbox is active */}
-        {mobileView !== 'inbox' && (
-          <button 
-            onClick={() => setMobileView('inbox')}
-            className="fixed bottom-20 right-4 bg-primary-600 text-white p-4 rounded-full shadow-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 z-20"
-            aria-label="Open AI Chat"
-          >
-              <ChatIcon />
-          </button>
+        {/* Chat Modal for Mobile */}
+        {isChatOpen && (
+            <div className="md:hidden fixed inset-0 bg-gray-100 dark:bg-gray-900 z-50 flex flex-col animate-slide-in-up">
+                <div className="flex-grow overflow-hidden">
+                     {/* The ChatInterface header is disabled here, as the modal provides its own */}
+                     <ChatInterface onAiSearch={handleAiSearch} showHeader={false} />
+                </div>
+                 {/* Custom footer with close button for the modal */}
+                <div className="p-2 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                   <button 
+                        onClick={() => setIsChatOpen(false)}
+                        className="w-full flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    >
+                        <CloseIcon />
+                        <span className="ml-2 font-semibold">Close Chat</span>
+                    </button>
+                </div>
+            </div>
         )}
-
       </div>
     </div>
   );
