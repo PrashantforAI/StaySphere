@@ -5,9 +5,11 @@ import RightPanel from '../components/layout/RightPanel';
 import MobileNav, { MobileView } from '../components/layout/MobileNav';
 import ChatInterface from '../components/chat/ChatInterface';
 import { PropertySearchFilters } from '../types';
-import { dummyProperties } from '../data/dummyData';
+import { dummyProperties, dummyBookings } from '../data/dummyData';
 
 const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+
+export type SortOrder = 'default' | 'price_asc' | 'price_desc';
 
 const DashboardPage: React.FC = () => {
   // State to manage which view is shown on mobile
@@ -21,31 +23,46 @@ const DashboardPage: React.FC = () => {
   const [filters, setFilters] = useState<PropertySearchFilters>({});
   const [searchMode, setSearchMode] = useState<'manual' | 'ai'>('manual');
   const [isLoading, setIsLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('default');
 
-  // Effect to apply filters whenever they change
+  // Effect to apply filters and sorting whenever they change
   useEffect(() => {
     setIsLoading(true);
     // Simulate network delay for a better UX
     const debounceTimer = setTimeout(() => {
-        let properties = allProperties;
+        let properties = [...allProperties];
 
         // Location filter (case-insensitive partial match)
         if (filters.location) {
-            properties = properties.filter(p => p.location.toLowerCase().includes(filters.location!.toLowerCase()));
+            properties = properties.filter(p => p.location.city.toLowerCase().includes(filters.location!.toLowerCase()));
         }
 
         // Guests filter
         if (filters.guests) {
-            // Infants are typically not counted towards property capacity.
             const totalGuests = (filters.guests.adults || 0) + (filters.guests.kids || 0);
             if(totalGuests > 0) {
-               properties = properties.filter(p => p.guests >= totalGuests);
+               properties = properties.filter(p => p.capacity.maxGuests >= totalGuests);
             }
         }
         
-        // Date filtering can be added here once dummy data supports availability
-        // For example:
-        // if (filters.checkIn && filters.checkOut) { ... }
+        // Price filter
+        if (filters.priceMin) {
+            properties = properties.filter(p => p.pricing.basePrice >= filters.priceMin!);
+        }
+        if (filters.priceMax) {
+            properties = properties.filter(p => p.pricing.basePrice <= filters.priceMax!);
+        }
+
+        // Rules filters
+        if (filters.isPetFriendly) {
+            properties = properties.filter(p => p.rules.petFriendly);
+        }
+        if (filters.isVegAllowed) {
+            properties = properties.filter(p => p.rules.vegAllowed);
+        }
+        if (filters.isNonVegAllowed) {
+            properties = properties.filter(p => p.rules.nonVegAllowed);
+        }
 
         // Amenities filter (checks if all requested amenities are present)
         if (filters.amenities && filters.amenities.length > 0) {
@@ -56,12 +73,19 @@ const DashboardPage: React.FC = () => {
             );
         }
         
+        // Sorting logic
+        if (sortOrder === 'price_asc') {
+            properties.sort((a, b) => a.pricing.basePrice - b.pricing.basePrice);
+        } else if (sortOrder === 'price_desc') {
+            properties.sort((a, b) => b.pricing.basePrice - a.pricing.basePrice);
+        }
+        
         setFilteredProperties(properties);
         setIsLoading(false);
     }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [filters, allProperties]);
+  }, [filters, allProperties, sortOrder]);
 
   const handleManualSearch = (newFilters: PropertySearchFilters) => {
     setSearchMode('manual');
@@ -70,7 +94,8 @@ const DashboardPage: React.FC = () => {
 
   const handleAiSearch = (aiFilters: PropertySearchFilters) => {
     setSearchMode('ai');
-    setFilters(aiFilters);
+    // Merge AI filters with existing ones for a more interactive experience
+    setFilters(prev => ({...prev, ...aiFilters}));
      if (isChatOpen) {
       setIsChatOpen(false); // Close chat modal on mobile after AI search
     }
@@ -100,6 +125,8 @@ const DashboardPage: React.FC = () => {
             searchMode={searchMode}
             isLoading={isLoading}
             onModeToggle={handleModeToggle}
+            sortOrder={sortOrder}
+            onSortChange={setSortOrder}
         />;
       case 'profile':
         // On mobile, the LeftPanel can serve as the profile view
@@ -111,6 +138,8 @@ const DashboardPage: React.FC = () => {
             searchMode={searchMode}
             isLoading={isLoading}
             onModeToggle={handleModeToggle}
+            sortOrder={sortOrder}
+            onSortChange={setSortOrder}
         />;
     }
   };
@@ -134,6 +163,8 @@ const DashboardPage: React.FC = () => {
             searchMode={searchMode}
             isLoading={isLoading}
             onModeToggle={handleModeToggle}
+            sortOrder={sortOrder}
+            onSortChange={setSortOrder}
           />
         </div>
       </div>

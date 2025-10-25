@@ -40,15 +40,15 @@ export const extractSearchFiltersFromQuery = async (query: string): Promise<Prop
     const model = 'gemini-2.5-flash';
     const systemInstruction = `You are a helpful assistant for a vacation rental website in India called StaySphere.
 Your task is to identify and extract property search criteria from the user's message.
-The criteria include location, check-in/check-out dates, number of guests (adults, kids, infants), and specific amenities.
+The criteria include location, check-in/check-out dates, number of guests (adults, kids, infants), amenities, price range, and rules like pet-friendliness or dietary options.
 If the user's message seems like a search query, respond with a JSON object containing the extracted filters.
-If the message is just a general greeting or question (e.g., "hello", "how are you?", "what can you do?"), respond with an empty JSON object.
+If the message is just a general greeting or question (e.g., "hello", "how are you?"), respond with an empty JSON object.
 
-Example: "Find me a villa in Lonavala for 4 adults and 2 kids with a swimming pool from May 1 to May 5"
-Should result in: { "location": "Lonavala", "guests": { "adults": 4, "kids": 2 }, "amenities": ["swimming pool"], "checkIn": "YYYY-05-01", "checkOut": "YYYY-05-05" } (use the current year for YYYY if not specified).
+Example: "Find me a pet-friendly villa in Lonavala for 4 adults under 20000 with a swimming pool"
+Should result in: { "location": "Lonavala", "guests": { "adults": 4 }, "isPetFriendly": true, "amenities": ["swimming pool"], "priceMax": 20000 }
 
-Example: "I need a place in Goa for 2 people"
-Should result in: { "location": "Goa", "guests": { "adults": 2 } }
+Example: "I need a place in Goa for 2 people that allows non-veg food"
+Should result in: { "location": "Goa", "guests": { "adults": 2 }, "isNonVegAllowed": true }
 
 Example: "hello there"
 Should result in: {}
@@ -74,6 +74,11 @@ Should result in: {}
                 items: { type: Type.STRING },
                 description: 'A list of amenities requested, like "pool", "wifi", "parking".'
             },
+            priceMin: { type: Type.NUMBER, description: "The minimum price per night." },
+            priceMax: { type: Type.NUMBER, description: "The maximum price per night." },
+            isPetFriendly: { type: Type.BOOLEAN, description: "Whether the user wants a pet-friendly property." },
+            isVegAllowed: { type: Type.BOOLEAN, description: "Whether the user requires vegetarian-friendly properties." },
+            isNonVegAllowed: { type: Type.BOOLEAN, description: "Whether the user requires properties that allow non-vegetarian food." },
         },
     };
 

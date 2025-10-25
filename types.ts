@@ -72,6 +72,8 @@ export interface Property {
     petFriendly: boolean;
     smokingAllowed: boolean;
     eventsAllowed: boolean;
+    vegAllowed: boolean;
+    nonVegAllowed: boolean;
   };
   availability: {
     calendarSyncUrl?: string;
@@ -155,4 +157,7 @@ export interface PropertySearchFilters {
   amenities?: string[];
   priceMin?: number;
   priceMax?: number;
+  isPetFriendly?: boolean;
+  isVegAllowed?: boolean;
+  isNonVegAllowed?: boolean;
 }

@@ -5,6 +5,8 @@ import SearchBar from '../search/SearchBar';
 import { PropertySearchFilters } from '../../types';
 import Spinner from '../ui/Spinner';
 import { dummyProperties as DummyPropertyType } from '../../data/dummyData';
+import MapView from '../map/MapView';
+import { SortOrder } from '../../pages/DashboardPage';
 
 interface RightPanelProps {
   properties: typeof DummyPropertyType;
@@ -12,9 +14,11 @@ interface RightPanelProps {
   searchMode: 'manual' | 'ai';
   isLoading: boolean;
   onModeToggle: () => void;
+  sortOrder: SortOrder;
+  onSortChange: (order: SortOrder) => void;
 }
 
-const RightPanel: React.FC<RightPanelProps> = ({ properties, onManualSearch, searchMode, isLoading, onModeToggle }) => {
+const RightPanel: React.FC<RightPanelProps> = ({ properties, onManualSearch, searchMode, isLoading, onModeToggle, sortOrder, onSortChange }) => {
   const { userProfile } = useAuth();
   
   return (
@@ -31,26 +35,38 @@ const RightPanel: React.FC<RightPanelProps> = ({ properties, onManualSearch, sea
 
         <SearchBar onSearch={onManualSearch} isAiMode={searchMode === 'ai'} />
         
-        <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">
-                {searchMode === 'ai' ? 'AI Recommendations' : 'Search Results'}
-            </h2>
-             <button
-                onClick={onModeToggle}
-                className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
-            >
-                {searchMode === 'ai' ? 'Switch to Manual Search' : 'Ask AI Instead'}
-            </button>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+            <div className='flex items-center'>
+                 <h2 className="text-xl font-bold">
+                    {searchMode === 'ai' ? 'AI Recommendations' : 'Search Results'}
+                 </h2>
+                 <span className="ml-2 text-sm font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">{properties.length}</span>
+            </div>
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+                <select
+                    id="sort-by"
+                    value={sortOrder}
+                    onChange={(e) => onSortChange(e.target.value as SortOrder)}
+                    className="block w-full sm:w-auto pl-3 pr-8 py-2 text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md"
+                >
+                    <option value="default">Sort by relevance</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                </select>
+                <button
+                    onClick={onModeToggle}
+                    className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline flex-shrink-0"
+                >
+                    {searchMode === 'ai' ? 'Manual Search' : 'Ask AI Instead'}
+                </button>
+            </div>
         </div>
-
-        {/* Placeholder for Map View */}
-        <div className="h-48 bg-gray-300 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center">
-            <p className="text-gray-500">Map View Placeholder</p>
-        </div>
+        
+        <MapView properties={properties} />
 
         {isLoading ? <div className="flex justify-center mt-8"><Spinner /></div> : (
              properties.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6 mt-6">
                 {properties.map((prop, index) => (
                     <PropertyCard key={index} property={prop} />
                 ))}
