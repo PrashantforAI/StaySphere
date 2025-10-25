@@ -3,7 +3,7 @@ import { extractSearchFiltersFromQuery, generateChatResponse } from '../../servi
 // FIX: Corrected typo in function import from getAiConversationMessages to getConversationMessages.
 import { addMessageToConversation, getConversationMessages, getOrCreateAiConversation } from '../../services/firestoreService';
 import { useAuth } from '../../hooks/useAuth';
-import { Message, PropertySearchFilters } from '../../types';
+import { Message, PropertySearchFilters, UserRole } from '../../types';
 
 interface ChatInterfaceProps {
     onAiSearch: (filters: PropertySearchFilters) => void;
@@ -78,7 +78,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
 
         // FIX: Determine the correct senderType based on user role. 'user' is not a valid senderType.
         // Default to 'guest' for any role that isn't 'host'.
-        const userSenderType = userProfile.role === 'host' ? 'host' : 'guest';
+        // FIX: Use UserRole enum members to correctly type the sender's role.
+        const userSenderType = userProfile.role === UserRole.HOST ? UserRole.HOST : UserRole.GUEST;
 
         // Save user message to Firestore
         await addMessageToConversation(conversationId, {

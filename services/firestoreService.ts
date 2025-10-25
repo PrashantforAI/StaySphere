@@ -2,7 +2,8 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from './firebase';
-import { UserProfile, UserRole, Property, Booking, Message } from '../types';
+import { UserProfile, UserRole, Property, Booking, Message, BookingStatus } from '../types';
+import { dummyProperties } from '../data/dummyData';
 
 /**
  * Creates a new user profile document in the Firestore 'users' collection.
@@ -128,4 +129,129 @@ export const getConversationMessages = async (conversationId: string): Promise<M
     console.error("Error fetching messages:", error);
     throw error;
   }
+};
+
+// =================================================================
+// BOOKING-RELATED FIRESTORE FUNCTIONS
+// =================================================================
+
+/**
+ * Creates a new booking document in Firestore.
+ * @param bookingData - The booking data to be saved.
+ * @returns The ID of the newly created booking document.
+ */
+export const createBooking = async (bookingData: Omit<Booking, 'bookingId' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+    try {
+        const docRef = await db.collection('bookings').add({
+            ...bookingData,
+            bookingStatus: BookingStatus.PENDING_CONFIRMATION,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error("Error creating booking:", error);
+        throw new Error("Failed to create booking in Firestore.");
+    }
+};
+
+/**
+ * Fetches a single booking by its ID.
+ * @param bookingId The ID of the booking to fetch.
+ * @returns A promise that resolves to the Booking object or null if not found.
+ */
+export const getBookingById = async (bookingId: string): Promise<Booking | null> => {
+    try {
+        const doc = await db.collection('bookings').doc(bookingId).get();
+        if (doc.exists) {
+            return { bookingId: doc.id, ...doc.data() } as Booking;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching booking by ID:", error);
+        throw error;
+    }
+};
+
+
+/**
+ * Fetches all bookings for a specific guest.
+ * @param guestId The user ID of the guest.
+ * @returns A promise that resolves to an array of Booking objects.
+ */
+export const getGuestBookings = async (guestId: string): Promise<Booking[]> => {
+    try {
+        // FIX: Removed .orderBy() clause to prevent query error that requires a composite index.
+        // Sorting will be handled on the client-side after fetching.
+        const snapshot = await db.collection('bookings').where('guestId', '==', guestId).get();
+        const bookings = snapshot.docs.map(doc => ({ bookingId: doc.id, ...doc.data() } as Booking));
+        
+        // Sort the results by check-in date in descending order on the client.
+        bookings.sort((a, b) => b.checkIn.localeCompare(a.checkIn));
+
+        return bookings;
+    } catch (error) {
+        console.error("Error fetching guest bookings:", error);
+        throw error;
+    }
+};
+
+/**
+ * Fetches all bookings for a specific host.
+ * @param hostId The user ID of the host.
+ * @returns A promise that resolves to an array of Booking objects.
+ */
+export const getHostBookings = async (hostId: string): Promise<Booking[]> => {
+    try {
+        // FIX: Removed .orderBy() clause to prevent query error that requires a composite index.
+        // Sorting will be handled on the client-side after fetching.
+        const snapshot = await db.collection('bookings').where('hostId', '==', hostId).get();
+        const bookings = snapshot.docs.map(doc => ({ bookingId: doc.id, ...doc.data() } as Booking));
+
+        // Sort the results by check-in date in descending order on the client.
+        bookings.sort((a, b) => b.checkIn.localeCompare(a.checkIn));
+
+        return bookings;
+    } catch (error) {
+        console.error("Error fetching host bookings:", error);
+        throw error;
+    }
+};
+
+
+/**
+ * Updates the status of a booking (e.g., to confirmed or cancelled).
+ * @param bookingId The ID of the booking to update.
+ * @param newStatus The new BookingStatus.
+ * @returns A promise that resolves when the update is complete.
+ */
+export const updateBookingStatus = async (bookingId: string, newStatus: BookingStatus): Promise<void> => {
+    try {
+        await db.collection('bookings').doc(bookingId).update({
+            bookingStatus: newStatus,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (error) {
+        console.error("Error updating booking status:", error);
+        throw error;
+    }
+};
+
+
+// =================================================================
+// PROPERTY-RELATED FIRESTORE FUNCTIONS
+// =================================================================
+// NOTE: Currently, we use dummy data. These are stubs for when properties are moved to Firestore.
+
+/**
+ * Fetches a single property by its ID.
+ * NOTE: This currently simulates a DB fetch using local dummy data.
+ * @param propertyId The ID of the property to fetch.
+ * @returns A promise that resolves to the Property object or null if not found.
+ */
+export const getPropertyById = async (propertyId: string): Promise<Property | null> => {
+    // Simulate async fetch
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const property = dummyProperties.find(p => p.propertyId === propertyId);
+    return property || null;
 };

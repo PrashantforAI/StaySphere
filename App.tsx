@@ -11,6 +11,12 @@ import { ROUTES } from './constants';
 import { isFirebaseConfigured } from './services/firebase';
 import FirebaseConfigNotice from './components/setup/FirebaseConfigNotice';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import PropertyDetailPage from './pages/PropertyDetailPage';
+import MyTripsPage from './pages/MyTripsPage';
+import HostBookingsPage from './pages/HostBookingsPage';
+import BookingDetailPage from './pages/BookingDetailPage';
+import BookingConfirmationPage from './pages/BookingConfirmationPage';
+import PaymentPage from './pages/PaymentPage';
 
 const App: React.FC = () => {
 
@@ -24,16 +30,39 @@ const App: React.FC = () => {
         <AuthProvider>
           <HashRouter>
             <Routes>
+              {/* Public Routes */}
               <Route path={ROUTES.HOME} element={<HomePage />} />
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
               <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+              
+              {/* Protected Routes */}
               <Route 
                 path={ROUTES.DASHBOARD}
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                } 
+                element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} 
+              />
+              <Route 
+                path={ROUTES.PROPERTY_DETAIL}
+                element={<ProtectedRoute><PropertyDetailPage /></ProtectedRoute>} 
+              />
+              <Route 
+                path={ROUTES.MY_TRIPS}
+                element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} 
+              />
+               <Route 
+                path={ROUTES.HOST_BOOKINGS}
+                element={<ProtectedRoute><HostBookingsPage /></ProtectedRoute>} 
+              />
+               <Route 
+                path={ROUTES.BOOKING_DETAIL}
+                element={<ProtectedRoute><BookingDetailPage /></ProtectedRoute>} 
+              />
+               <Route 
+                path={ROUTES.BOOKING_CONFIRMATION}
+                element={<ProtectedRoute><BookingConfirmationPage /></ProtectedRoute>} 
+              />
+               <Route 
+                path={ROUTES.PAYMENT}
+                element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} 
               />
             </Routes>
           </HashRouter>

@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LeftPanel from '../components/layout/LeftPanel';
 import CenterPanel from '../components/layout/CenterPanel';
 import RightPanel from '../components/layout/RightPanel';
 import MobileNav, { MobileView } from '../components/layout/MobileNav';
 import ChatInterface from '../components/chat/ChatInterface';
-import { PropertySearchFilters } from '../types';
-import { dummyProperties, dummyBookings } from '../data/dummyData';
+import { PropertySearchFilters, UserRole } from '../types';
+import { dummyProperties } from '../data/dummyData';
+import { useAuth } from '../hooks/useAuth';
+import { ROUTES } from '../constants';
 
 const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
 
 export type SortOrder = 'default' | 'price_asc' | 'price_desc';
 
 const DashboardPage: React.FC = () => {
+  const { userProfile } = useAuth();
+  const navigate = useNavigate();
   // State to manage which view is shown on mobile
   const [mobileView, setMobileView] = useState<MobileView>('main');
   // State to control the visibility of the full-screen chat modal on mobile
