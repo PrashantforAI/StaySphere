@@ -1,4 +1,4 @@
-import { BookingStatus, Property, Review } from "../types";
+import { Booking, BookingStatus, PaymentStatus, Property, Review } from "../types";
 
 // Dummy host profiles
 const dummyHosts = {
@@ -117,7 +117,7 @@ export const dummyProperties: Property[] = [
  * Dummy booking data to simulate user trips.
  * This can be used to populate "My Trips" pages for guests and booking management for hosts.
  */
-export const dummyBookings = [
+export const dummyBookings: Booking[] = [
     {
         bookingId: 'book001',
         propertyId: 'prop001',
@@ -125,12 +125,14 @@ export const dummyBookings = [
         propertyImage: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop',
         guestId: 'guest@staysphere.com',
         hostId: 'host@staysphere.com',
-        checkIn: '2024-08-10',
-        checkOut: '2024-08-15',
+        checkIn: new Date(new Date().setDate(new Date().getDate() + 10)).toISOString().split('T')[0], // Upcoming
+        checkOut: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString().split('T')[0],
         bookingStatus: BookingStatus.CONFIRMED,
         guests: { adults: 2, children: 1, infants: 0 },
         pricing: { nights: 5, subtotal: 75000, cleaningFee: 1000, platformFee: 3750, gst: 675, total: 80425 },
-        payment: { status: 'paid' }
+        // FIX: Used PaymentStatus enum instead of string literal.
+        payment: { status: PaymentStatus.PAID, amount: 80425, currency: 'INR' },
+        createdAt: {} as any, updatedAt: {} as any
     },
     {
         bookingId: 'book002',
@@ -139,12 +141,14 @@ export const dummyBookings = [
         propertyImage: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
         guestId: 'guest@staysphere.com',
         hostId: 'host@staysphere.com',
-        checkIn: '2024-06-01',
-        checkOut: '2024-06-04',
+        checkIn: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0], // Past
+        checkOut: new Date(new Date().setDate(new Date().getDate() - 27)).toISOString().split('T')[0],
         bookingStatus: BookingStatus.COMPLETED,
         guests: { adults: 8, children: 2, infants: 1 },
         pricing: { nights: 3, subtotal: 54000, cleaningFee: 1200, platformFee: 2700, gst: 486, total: 58386 },
-        payment: { status: 'paid' }
+        // FIX: Used PaymentStatus enum instead of string literal.
+        payment: { status: PaymentStatus.PAID, amount: 58386, currency: 'INR' },
+        createdAt: {} as any, updatedAt: {} as any
     },
     {
         bookingId: 'book003',
@@ -153,12 +157,14 @@ export const dummyBookings = [
         propertyImage: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=2070&auto=format&fit=crop',
         guestId: 'anotherguest@example.com',
         hostId: 'host@staysphere.com',
-        checkIn: '2024-09-20',
-        checkOut: '2024-09-23',
+        checkIn: new Date(new Date().setDate(new Date().getDate() + 20)).toISOString().split('T')[0], // Upcoming
+        checkOut: new Date(new Date().setDate(new Date().getDate() + 23)).toISOString().split('T')[0],
         bookingStatus: BookingStatus.CONFIRMED,
         guests: { adults: 2, children: 0, infants: 0 },
         pricing: { nights: 3, subtotal: 25500, cleaningFee: 500, platformFee: 1275, gst: 229.5, total: 27504.5 },
-        payment: { status: 'paid' }
+        // FIX: Used PaymentStatus enum instead of string literal.
+        payment: { status: PaymentStatus.PAID, amount: 27504.5, currency: 'INR' },
+        createdAt: {} as any, updatedAt: {} as any
     },
     {
         bookingId: 'book004',
@@ -167,11 +173,29 @@ export const dummyBookings = [
         propertyImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop',
         guestId: 'guest@staysphere.com',
         hostId: 'host@staysphere.com',
-        checkIn: '2024-10-05',
-        checkOut: '2024-10-10',
+        checkIn: new Date(new Date().setDate(new Date().getDate() + 40)).toISOString().split('T')[0], // Pending
+        checkOut: new Date(new Date().setDate(new Date().getDate() + 45)).toISOString().split('T')[0],
         bookingStatus: BookingStatus.PENDING_CONFIRMATION,
         guests: { adults: 1, children: 0, infants: 0 },
         pricing: { nights: 5, subtotal: 60000, cleaningFee: 800, platformFee: 3000, gst: 540, total: 64340 },
-        payment: { status: 'pending' }
+        // FIX: Used PaymentStatus enum instead of string literal.
+        payment: { status: PaymentStatus.PENDING, amount: 64340, currency: 'INR' },
+        createdAt: {} as any, updatedAt: {} as any
+    },
+    {
+        bookingId: 'book005',
+        propertyId: 'prop004',
+        propertyTitle: 'Luxury Lakeside Retreat',
+        propertyImage: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=2070&auto=format&fit=crop',
+        guestId: 'guest@staysphere.com',
+        hostId: 'host@staysphere.com',
+        checkIn: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString().split('T')[0], // Ongoing
+        checkOut: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString().split('T')[0],
+        bookingStatus: BookingStatus.ONGOING,
+        guests: { adults: 4, children: 0, infants: 0 },
+        pricing: { nights: 5, subtotal: 110000, cleaningFee: 1500, platformFee: 5500, gst: 990, total: 117990 },
+        // FIX: Used PaymentStatus enum instead of string literal.
+        payment: { status: PaymentStatus.PAID, amount: 117990, currency: 'INR' },
+        createdAt: {} as any, updatedAt: {} as any
     }
-].map(b => ({ ...b, createdAt: {} as any, updatedAt: {} as any } as any));
+];

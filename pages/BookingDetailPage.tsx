@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getBookingById } from '../services/firestoreService';
-import { Booking } from '../types';
+import { Booking, UserRole } from '../types';
 import Spinner from '../components/ui/Spinner';
 import Header from '../components/layout/Header';
 import { ROUTES } from '../constants';
+import { useAuth } from '../hooks/useAuth';
+
+const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>;
 
 const BookingDetailPage: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const { userProfile } = useAuth();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,11 +58,18 @@ const BookingDetailPage: React.FC = () => {
 
   const formatDate = (date: string) => new Date(date).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const totalGuests = booking.guests.adults + booking.guests.children;
+  const backLink = userProfile?.role === UserRole.HOST ? ROUTES.HOST_BOOKINGS : ROUTES.MY_TRIPS;
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <Header />
       <main className="container mx-auto p-4 md:p-8">
+        <div className="mb-4">
+            <Link to={backLink} className="flex items-center text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                <ArrowLeftIcon />
+                <span className="ml-2">Back to Bookings</span>
+            </Link>
+        </div>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">Booking Details</h1>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">

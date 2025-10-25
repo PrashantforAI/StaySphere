@@ -2,6 +2,7 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
+import 'firebase/compat/storage'; // Added for Firebase Storage
 
 // =================================================================
 // IMPORTANT: FIREBASE CONFIGURATION
@@ -15,7 +16,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDrj9qK-grctKlifciy7M4T4iF24kkUhhk",
   authDomain: "staysphere-82b5d.firebaseapp.com",
   projectId: "staysphere-82b5d",
-  storageBucket: "staysphere-82b5d.firebasestorage.app",
+  storageBucket: "staysphere-82b5d.appspot.com", // Corrected storage bucket URL
   messagingSenderId: "510917404947",
   appId: "1:510917404947:web:2b1d1af311cd4967df52e6",
 };
@@ -32,5 +33,6 @@ const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(fireb
 // Export Firebase services
 export const auth = firebase.auth();
 export const db = firebase.firestore();
+export const storage = firebase.storage(); // Export storage service
 
 export default app;

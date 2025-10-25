@@ -2,8 +2,8 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from './firebase';
-import { UserProfile, UserRole, Property, Booking, Message, BookingStatus } from '../types';
-import { dummyProperties } from '../data/dummyData';
+import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus } from '../types';
+import { dummyProperties, dummyBookings } from '../data/dummyData';
 
 /**
  * Creates a new user profile document in the Firestore 'users' collection.
@@ -162,11 +162,10 @@ export const createBooking = async (bookingData: Omit<Booking, 'bookingId' | 'cr
  */
 export const getBookingById = async (bookingId: string): Promise<Booking | null> => {
     try {
-        const doc = await db.collection('bookings').doc(bookingId).get();
-        if (doc.exists) {
-            return { bookingId: doc.id, ...doc.data() } as Booking;
-        }
-        return null;
+        // NOTE: Simulating fetch from dummy data
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const booking = dummyBookings.find(b => b.bookingId === bookingId) || null;
+        return booking;
     } catch (error) {
         console.error("Error fetching booking by ID:", error);
         throw error;
@@ -181,10 +180,11 @@ export const getBookingById = async (bookingId: string): Promise<Booking | null>
  */
 export const getGuestBookings = async (guestId: string): Promise<Booking[]> => {
     try {
-        // FIX: Removed .orderBy() clause to prevent query error that requires a composite index.
-        // Sorting will be handled on the client-side after fetching.
-        const snapshot = await db.collection('bookings').where('guestId', '==', guestId).get();
-        const bookings = snapshot.docs.map(doc => ({ bookingId: doc.id, ...doc.data() } as Booking));
+        // NOTE: Using dummy data for demonstration.
+        // In a real app, you would perform a Firestore query:
+        // const snapshot = await db.collection('bookings').where('guestId', '==', guestId).get();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const bookings = dummyBookings.filter(b => b.guestId === 'guest@staysphere.com');
         
         // Sort the results by check-in date in descending order on the client.
         bookings.sort((a, b) => b.checkIn.localeCompare(a.checkIn));
@@ -203,10 +203,11 @@ export const getGuestBookings = async (guestId: string): Promise<Booking[]> => {
  */
 export const getHostBookings = async (hostId: string): Promise<Booking[]> => {
     try {
-        // FIX: Removed .orderBy() clause to prevent query error that requires a composite index.
-        // Sorting will be handled on the client-side after fetching.
-        const snapshot = await db.collection('bookings').where('hostId', '==', hostId).get();
-        const bookings = snapshot.docs.map(doc => ({ bookingId: doc.id, ...doc.data() } as Booking));
+        // NOTE: Using dummy data for demonstration.
+        // In a real app, you would perform a Firestore query:
+        // const snapshot = await db.collection('bookings').where('hostId', '==', hostId).get();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const bookings = dummyBookings.filter(b => b.hostId === 'host@staysphere.com');
 
         // Sort the results by check-in date in descending order on the client.
         bookings.sort((a, b) => b.checkIn.localeCompare(a.checkIn));
@@ -227,10 +228,21 @@ export const getHostBookings = async (hostId: string): Promise<Booking[]> => {
  */
 export const updateBookingStatus = async (bookingId: string, newStatus: BookingStatus): Promise<void> => {
     try {
+        // This would update Firestore in a real app.
+        console.log(`[SIMULATION] Updating booking ${bookingId} to status ${newStatus}`);
+        // To make the UI update, we can modify the dummy data in-memory (this is for demo only)
+        const bookingIndex = dummyBookings.findIndex(b => b.bookingId === bookingId);
+        if (bookingIndex !== -1) {
+            dummyBookings[bookingIndex].bookingStatus = newStatus;
+        }
+        await new Promise(resolve => setTimeout(resolve, 300));
+        return;
+        /*
         await db.collection('bookings').doc(bookingId).update({
             bookingStatus: newStatus,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
+        */
     } catch (error) {
         console.error("Error updating booking status:", error);
         throw error;
@@ -241,7 +253,62 @@ export const updateBookingStatus = async (bookingId: string, newStatus: BookingS
 // =================================================================
 // PROPERTY-RELATED FIRESTORE FUNCTIONS
 // =================================================================
-// NOTE: Currently, we use dummy data. These are stubs for when properties are moved to Firestore.
+
+/**
+ * Creates a new property document in Firestore.
+ * @param propertyData - The initial data for the property.
+ * @returns The ID of the newly created property document.
+ */
+export const addProperty = async (propertyData: Partial<Property>): Promise<string> => {
+    try {
+        const docRef = await db.collection('properties').add({
+            ...propertyData,
+            status: propertyData.status || PropertyStatus.DRAFT,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error("Error adding property:", error);
+        throw new Error("Failed to create property in Firestore.");
+    }
+};
+
+/**
+ * Updates an existing property document in Firestore.
+ * @param propertyId - The ID of the property to update.
+ * @param propertyData - An object containing the fields to update.
+ */
+export const updateProperty = async (propertyId: string, propertyData: Partial<Property>): Promise<void> => {
+    try {
+        await db.collection('properties').doc(propertyId).update({
+            ...propertyData,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (error) {
+        console.error("Error updating property:", error);
+        throw new Error("Failed to update property in Firestore.");
+    }
+};
+
+/**
+ * Fetches all properties belonging to a specific host.
+ * @param hostId The user ID of the host.
+ * @returns A promise that resolves to an array of Property objects.
+ */
+export const getHostProperties = async (hostId: string): Promise<Property[]> => {
+    try {
+        // NOTE: For a real app, you'd fetch from Firestore. We'll simulate this.
+        console.log(`Simulating fetch for host properties: ${hostId}`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // We filter properties for our dummy host.
+        return dummyProperties.filter(p => p.hostId === 'host@staysphere.com');
+    } catch (error) {
+        console.error("Error fetching host properties:", error);
+        throw error;
+    }
+};
+
 
 /**
  * Fetches a single property by its ID.

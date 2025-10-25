@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Message, PropertySearchFilters } from '../types';
 
@@ -140,4 +141,45 @@ Your (ai) response:
         console.error("Error generating chat response with Gemini:", error);
         return "I'm having trouble connecting right now. Please try again later.";
     }
+};
+
+
+/**
+ * Generates a compelling property description using AI.
+ * @param title - The title of the property.
+ * @param type - The type of property (e.g., Villa, Apartment).
+ * @param location - The city and state of the property.
+ * @param amenities - A list of key amenities.
+ * @returns A promise that resolves with the generated description string.
+ */
+export const generatePropertyDescription = async (
+  title: string,
+  type: string,
+  location: string,
+  amenities: string[]
+): Promise<string> => {
+  const model = 'gemini-2.5-flash';
+  const prompt = `
+    Write a captivating and welcoming property description for a vacation rental listing on a platform called StaySphere.
+    The description should be around 3-4 sentences long and highlight the key features to attract guests.
+    
+    Property Details:
+    - Title: ${title}
+    - Type: ${type}
+    - Location: ${location}
+    - Key Amenities: ${amenities.join(', ')}
+
+    Generate a description that is both informative and enticing.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+    });
+    return response.text;
+  } catch (error) {
+    console.error("Error generating property description with Gemini:", error);
+    return "Could not generate a description. Please write one manually.";
+  }
 };
