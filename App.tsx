@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -25,12 +24,14 @@ import EarningsPage from './pages/host/EarningsPage';
 import PropertyCalendarPage from './pages/host/PropertyCalendarPage';
 import ServiceMarketplacePage from './pages/host/ServiceMarketplacePage';
 import HostServiceOrdersPage from './pages/host/HostServiceOrdersPage';
-import ProviderOnboardingPage from './pages/service_provider/ProviderOnboardingPage';
 import ProviderDashboardPage from './pages/service_provider/ProviderDashboardPage';
 import ProviderJobsPage from './pages/service_provider/ProviderJobsPage';
 import ProviderProfilePage from './pages/ProviderProfilePage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProviderApprovalsPage from './pages/admin/AdminProviderApprovalsPage';
+import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
+import { UserRole } from './types';
+import BecomeRolePage from './pages/BecomeRolePage';
 
 const App: React.FC = () => {
 
@@ -57,27 +58,30 @@ const App: React.FC = () => {
               <Route path={ROUTES.BOOKING_CONFIRMATION} element={<ProtectedRoute><BookingConfirmationPage /></ProtectedRoute>} />
               <Route path={ROUTES.PAYMENT} element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
               <Route path={ROUTES.PROVIDER_PROFILE} element={<ProtectedRoute><ProviderProfilePage /></ProtectedRoute>} />
+               {/* --- Role Upgrade Flow (for Guests only) --- */}
+              <Route path={ROUTES.BECOME_HOST} element={<RoleProtectedRoute role={UserRole.GUEST}><BecomeRolePage targetRole={UserRole.HOST} /></RoleProtectedRoute>} />
+              <Route path={ROUTES.BECOME_PROVIDER} element={<RoleProtectedRoute role={UserRole.GUEST}><BecomeRolePage targetRole={UserRole.SERVICE_PROVIDER} /></RoleProtectedRoute>} />
+
 
               {/* --- Protected Host Routes --- */}
-              <Route path={ROUTES.HOST_DASHBOARD} element={<ProtectedRoute><HostPropertiesPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_PROPERTIES} element={<ProtectedRoute><HostPropertiesPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_ADD_PROPERTY} element={<ProtectedRoute><PropertyEditorPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_EDIT_PROPERTY} element={<ProtectedRoute><PropertyEditorPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_BOOKINGS} element={<ProtectedRoute><HostBookingsPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_SUBSCRIPTION} element={<ProtectedRoute><SubscriptionPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_EARNINGS} element={<ProtectedRoute><EarningsPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_CALENDAR} element={<ProtectedRoute><PropertyCalendarPage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_SERVICE_MARKETPLACE} element={<ProtectedRoute><ServiceMarketplacePage /></ProtectedRoute>} />
-              <Route path={ROUTES.HOST_SERVICE_ORDERS} element={<ProtectedRoute><HostServiceOrdersPage /></ProtectedRoute>} />
+              <Route path={ROUTES.HOST_DASHBOARD} element={<RoleProtectedRoute role={UserRole.HOST}><HostPropertiesPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_PROPERTIES} element={<RoleProtectedRoute role={UserRole.HOST}><HostPropertiesPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_ADD_PROPERTY} element={<RoleProtectedRoute role={UserRole.HOST}><PropertyEditorPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_EDIT_PROPERTY} element={<RoleProtectedRoute role={UserRole.HOST}><PropertyEditorPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_BOOKINGS} element={<RoleProtectedRoute role={UserRole.HOST}><HostBookingsPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_SUBSCRIPTION} element={<RoleProtectedRoute role={UserRole.HOST}><SubscriptionPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_EARNINGS} element={<RoleProtectedRoute role={UserRole.HOST}><EarningsPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_CALENDAR} element={<RoleProtectedRoute role={UserRole.HOST}><PropertyCalendarPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_SERVICE_MARKETPLACE} element={<RoleProtectedRoute role={UserRole.HOST}><ServiceMarketplacePage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.HOST_SERVICE_ORDERS} element={<RoleProtectedRoute role={UserRole.HOST}><HostServiceOrdersPage /></RoleProtectedRoute>} />
               
               {/* --- Protected Service Provider Routes --- */}
-              <Route path={ROUTES.PROVIDER_ONBOARDING} element={<ProtectedRoute><ProviderOnboardingPage/></ProtectedRoute>} />
-              <Route path={ROUTES.PROVIDER_DASHBOARD} element={<ProtectedRoute><ProviderDashboardPage/></ProtectedRoute>} />
-              <Route path={ROUTES.PROVIDER_JOBS} element={<ProtectedRoute><ProviderJobsPage/></ProtectedRoute>} />
+              <Route path={ROUTES.PROVIDER_DASHBOARD} element={<RoleProtectedRoute role={UserRole.SERVICE_PROVIDER}><ProviderDashboardPage/></RoleProtectedRoute>} />
+              <Route path={ROUTES.PROVIDER_JOBS} element={<RoleProtectedRoute role={UserRole.SERVICE_PROVIDER}><ProviderJobsPage/></RoleProtectedRoute>} />
 
               {/* --- Protected Admin Routes --- */}
-              <Route path={ROUTES.ADMIN_DASHBOARD} element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
-              <Route path={ROUTES.ADMIN_PROVIDER_APPROVALS} element={<ProtectedRoute><AdminProviderApprovalsPage /></ProtectedRoute>} />
+              <Route path={ROUTES.ADMIN_DASHBOARD} element={<RoleProtectedRoute role={UserRole.ADMIN}><AdminDashboardPage /></RoleProtectedRoute>} />
+              <Route path={ROUTES.ADMIN_PROVIDER_APPROVALS} element={<RoleProtectedRoute role={UserRole.ADMIN}><AdminProviderApprovalsPage /></RoleProtectedRoute>} />
 
             </Routes>
           </HashRouter>

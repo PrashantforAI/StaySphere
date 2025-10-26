@@ -24,13 +24,16 @@ export const ROUTES = {
 
   // Service Provider Routes
   PROVIDER_DASHBOARD: '/provider/dashboard',
-  PROVIDER_ONBOARDING: '/provider/onboarding',
   PROVIDER_JOBS: '/provider/jobs',
   PROVIDER_PROFILE: '/provider/:providerId',
 
   // Admin Routes
   ADMIN_DASHBOARD: '/admin/dashboard',
   ADMIN_PROVIDER_APPROVALS: '/admin/provider-approvals',
+
+  // Role Upgrade Flow
+  BECOME_HOST: '/become-host',
+  BECOME_PROVIDER: '/become-provider',
 };
 
 export const ROLES = {

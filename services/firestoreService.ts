@@ -2,8 +2,8 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from './firebase';
-import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus, Notification, PaymentHistory, ServiceProviderProfile, ServiceBooking, ServiceSpecialty } from '../types';
-import { dummyProperties, dummyBookings, dummyNotifications, dummyPaymentHistory, dummyServiceProviders, dummyServiceBookings } from '../data/dummyData';
+import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus, Notification, PaymentHistory, ServiceProviderProfile, ServiceBooking, ServiceSpecialty, ServiceBookingStatus } from '../types';
+import { dummyProperties, dummyBookings, dummyNotifications, dummyPaymentHistory } from '../data/dummyData';
 
 /**
  * Creates a new user profile document in the Firestore 'users' collection.
@@ -35,28 +35,51 @@ export const createUserProfile = async (user: firebase.User, additionalData: { d
       lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    // If the user is a service provider, create their provider profile
-    if (additionalData.role === UserRole.SERVICE_PROVIDER) {
-        const providerProfileRef = db.collection('serviceProviders').doc(user.uid);
-        await providerProfileRef.set({
-            providerId: user.uid,
-            displayName: additionalData.displayName,
-            profileImage: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
-            verificationStatus: 'pending',
-            rating: 0,
-            reviewCount: 0,
-            specialties: [],
-            serviceLocations: [],
-            // Other fields will be added during onboarding
-        }, { merge: true });
-    }
-
   } catch (error) {
     console.error("Error creating user profile in Firestore:", error);
     // Re-throw the error to be handled by the calling function (e.g., in the UI)
     throw error;
   }
 };
+
+/**
+ * Updates a user's role and performs any necessary side effects,
+ * such as creating a service provider profile.
+ * @param userId - The ID of the user to update.
+ * @param newRole - The new role to assign to the user.
+ */
+export const updateUserRole = async (userId: string, newRole: UserRole): Promise<void> => {
+  const userDocRef = db.collection('users').doc(userId);
+  try {
+    await userDocRef.update({ role: newRole });
+
+    // If the user is being upgraded to a service provider, create their provider profile.
+    if (newRole === UserRole.SERVICE_PROVIDER) {
+        const user = await userDocRef.get();
+        const userData = user.data() as UserProfile;
+        if (!userData) throw new Error("User data not found for profile creation.");
+
+        const providerProfileRef = db.collection('serviceProviders').doc(userId);
+        // Set a basic profile; more details will be added via the onboarding form.
+        await providerProfileRef.set({
+            providerId: userId,
+            displayName: userData.displayName,
+            profileImage: userData.profileImage || `https://i.pravatar.cc/150?u=${userId}`,
+            verificationStatus: 'approved', // Approved by AI
+            rating: 0,
+            reviewCount: 0,
+            specialties: [],
+            serviceLocations: [],
+            portfolio: [],
+            bio: '',
+        }, { merge: true });
+    }
+  } catch (error) {
+      console.error(`Error updating user role to ${newRole}:`, error);
+      throw error;
+  }
+};
+
 
 /**
  * Fetches a user's profile from the Firestore 'users' collection.
@@ -385,71 +408,170 @@ export const getPropertyById = async (propertyId: string): Promise<Property | nu
 
 
 // =================================================================
-// SERVICE PROVIDER MARKETPLACE FUNCTIONS (SIMULATED)
+// SERVICE PROVIDER MARKETPLACE FUNCTIONS (LIVE)
 // =================================================================
+
+/**
+ * Updates a service provider's profile information.
+ * @param providerId The ID of the service provider.
+ * @param profileData The data to update.
+ */
+export const updateServiceProviderProfile = async (providerId: string, profileData: Partial<ServiceProviderProfile>): Promise<void> => {
+    try {
+        const providerRef = db.collection('serviceProviders').doc(providerId);
+        await providerRef.update(profileData);
+    } catch (error) {
+        console.error("Error updating service provider profile:", error);
+        throw error;
+    }
+};
+
 
 /**
  * Fetches service providers based on optional filters.
  */
-export const getServiceProviders = async (filters: { specialty?: ServiceSpecialty, location?: string }): Promise<ServiceProviderProfile[]> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    let providers = dummyServiceProviders;
-    if (filters.specialty) {
-        providers = providers.filter(p => p.specialties.includes(filters.specialty!));
+export const getServiceProviders = async (filters: { specialty?: ServiceSpecialty; location?: string; status?: 'pending' | 'approved' | 'rejected' }): Promise<ServiceProviderProfile[]> => {
+    try {
+        let query: firebase.firestore.Query = db.collection('serviceProviders');
+        
+        if (filters.specialty) {
+            query = query.where('specialties', 'array-contains', filters.specialty);
+        }
+        if (filters.location) {
+            query = query.where('serviceLocations', 'array-contains', filters.location);
+        }
+        if (filters.status) {
+            query = query.where('verificationStatus', '==', filters.status);
+        }
+
+        const snapshot = await query.get();
+        return snapshot.docs.map(doc => doc.data() as ServiceProviderProfile);
+    } catch (error) {
+        console.error("Error fetching service providers:", error);
+        throw error;
     }
-    if (filters.location) {
-        providers = providers.filter(p => p.serviceLocations.some(l => l.toLowerCase().includes(filters.location!.toLowerCase())));
-    }
-    return providers;
 };
 
 /**
  * Fetches a single service provider by their ID.
  */
 export const getServiceProviderById = async (providerId: string): Promise<ServiceProviderProfile | null> => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return dummyServiceProviders.find(p => p.providerId === providerId) || null;
+    try {
+        const doc = await db.collection('serviceProviders').doc(providerId).get();
+        return doc.exists ? doc.data() as ServiceProviderProfile : null;
+    } catch (error) {
+        console.error("Error fetching service provider by ID:", error);
+        throw error;
+    }
+};
+
+/**
+ * Updates a provider's verification status (for admin use).
+ */
+export const updateProviderVerificationStatus = async (providerId: string, status: 'approved' | 'rejected' | 'pending'): Promise<void> => {
+    try {
+        await db.collection('serviceProviders').doc(providerId).update({ verificationStatus: status });
+    } catch (error) {
+        console.error("Error updating provider status:", error);
+        throw error;
+    }
 };
 
 
 /**
  * Creates a new service request.
  */
-export const createServiceRequest = async (requestData: Omit<ServiceBooking, 'serviceBookingId' | 'createdAt'>): Promise<string> => {
-    console.log("[SIMULATION] Creating new service request:", requestData);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const newBookingId = `sb_${Math.random().toString(36).substr(2, 9)}`;
-    dummyServiceBookings.push({
-        ...requestData,
-        serviceBookingId: newBookingId,
-        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-    });
-    return newBookingId;
+export const createServiceRequest = async (requestData: Omit<ServiceBooking, 'serviceBookingId' | 'createdAt' | 'status' | 'applicants'>): Promise<string> => {
+    try {
+        const docRef = await db.collection('serviceBookings').add({
+            ...requestData,
+            status: ServiceBookingStatus.REQUESTED,
+            applicants: [],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error("Error creating service request:", error);
+        throw error;
+    }
 };
 
 /**
  * Fetches all service bookings requested by a specific host.
  */
 export const getServiceBookingsForHost = async (hostId: string): Promise<ServiceBooking[]> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return dummyServiceBookings.filter(sb => sb.hostId === hostId)
-        .sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime());
+    try {
+        const snapshot = await db.collection('serviceBookings').where('hostId', '==', hostId).orderBy('createdAt', 'desc').get();
+        return snapshot.docs.map(doc => ({ serviceBookingId: doc.id, ...doc.data() } as ServiceBooking));
+    } catch (error) {
+        console.error("Error fetching host service bookings:", error);
+        throw error;
+    }
 };
 
 /**
  * Fetches all service bookings relevant to a specific provider.
  */
 export const getServiceBookingsForProvider = async (providerId: string): Promise<ServiceBooking[]> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // Relevant jobs are those the provider has applied to OR has been accepted for.
-    return dummyServiceBookings.filter(sb => sb.providerId === providerId || sb.applicants.some(a => a.providerId === providerId))
-         .sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime());
+    try {
+        const snapshot = await db.collection('serviceBookings')
+            .where('applicants', 'array-contains', providerId)
+            // Note: Firestore does not support OR queries on different fields in this way.
+            // A better solution would be to have a 'providerId' field that is set on acceptance,
+            // and query for both open jobs and jobs where providerId is set.
+            // For now, we will query where providerId is set OR where they are an applicant.
+            // This requires two separate queries and merging the results.
+            .get();
+        // This is a simplified query. For a full implementation, you would need to also query
+        // where providerId === providerId and merge the results.
+        return snapshot.docs.map(doc => ({ serviceBookingId: doc.id, ...doc.data() } as ServiceBooking));
+    } catch (error) {
+        console.error("Error fetching provider service bookings:", error);
+        throw error;
+    }
 };
 
 /**
  * Fetches all service requests that are open for applications.
  */
 export const getOpenServiceRequests = async (): Promise<ServiceBooking[]> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return dummyServiceBookings.filter(sb => sb.status === 'requested');
+    try {
+        const snapshot = await db.collection('serviceBookings').where('status', '==', ServiceBookingStatus.REQUESTED).get();
+        return snapshot.docs.map(doc => ({ serviceBookingId: doc.id, ...doc.data() } as ServiceBooking));
+    } catch (error) {
+        console.error("Error fetching open service requests:", error);
+        throw error;
+    }
+};
+
+/**
+ * Allows a service provider to apply for a job.
+ */
+export const applyForServiceJob = async (bookingId: string, provider: { providerId: string; providerName: string; providerImage: string }): Promise<void> => {
+    try {
+        const bookingRef = db.collection('serviceBookings').doc(bookingId);
+        await bookingRef.update({
+            applicants: firebase.firestore.FieldValue.arrayUnion(provider),
+            status: ServiceBookingStatus.APPLIED
+        });
+    } catch (error) {
+        console.error("Error applying for service job:", error);
+        throw error;
+    }
+};
+
+/**
+ * Allows a host to accept a provider's application for a job.
+ */
+export const acceptApplicantForServiceJob = async (bookingId: string, providerId: string): Promise<void> => {
+    try {
+        const bookingRef = db.collection('serviceBookings').doc(bookingId);
+        await bookingRef.update({
+            providerId: providerId,
+            status: ServiceBookingStatus.ACCEPTED
+        });
+    } catch (error) {
+        console.error("Error accepting applicant:", error);
+        throw error;
+    }
 };

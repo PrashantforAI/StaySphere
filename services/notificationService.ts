@@ -37,7 +37,6 @@ export const onNewBookingCreated = async (booking: Booking): Promise<void> => {
         type: 'new_booking',
         referenceId: booking.bookingId,
     });
-    console.log(`[Notification Stub] Sent 'new_booking' notification to host ${booking.hostId}`);
 };
 
 /**
@@ -53,7 +52,6 @@ export const onBookingConfirmed = async (booking: Booking): Promise<void> => {
         type: 'booking_confirmed',
         referenceId: booking.bookingId,
     });
-    console.log(`[Notification Stub] Sent 'booking_confirmed' notification to guest ${booking.guestId}`);
 };
 
 /**
@@ -70,7 +68,6 @@ export const onBookingCancelled = async (booking: Booking, cancelledBy: 'guest' 
         type: 'booking_cancelled',
         referenceId: booking.bookingId,
     });
-    console.log(`[Notification Stub] Sent 'booking_cancelled' notification to user ${recipientId}`);
 };
 
 /**
@@ -87,7 +84,6 @@ export const onPayoutProcessed = async (hostId: string, amount: number, bookingI
         type: 'payout_processed',
         referenceId: bookingIds.length > 0 ? bookingIds[0] : '', // Reference the first booking.
     });
-    console.log(`[Notification Stub] Sent 'payout_processed' notification to host ${hostId}`);
 };
 
 
@@ -98,7 +94,8 @@ export const onPayoutProcessed = async (hostId: string, amount: number, bookingI
 export const onServiceRequestCreated = async (serviceBooking: ServiceBooking): Promise<void> => {
     // In a real app, you'd find providers matching the specialty and location
     // and create a notification for each of them.
-    console.log(`[Notification Stub] A new service request for '${serviceBooking.serviceType}' on '${serviceBooking.propertyTitle}' was created. Relevant providers should be notified.`);
+    // For now, we'll just log this action.
+    console.log(`A new service request for '${serviceBooking.serviceType}' on '${serviceBooking.propertyTitle}' was created. Relevant providers should be notified via a backend function.`);
 };
 
 /**
@@ -114,5 +111,4 @@ export const onServiceJobAccepted = async (serviceBooking: ServiceBooking): Prom
         type: 'service_job_accepted',
         referenceId: serviceBooking.serviceBookingId,
     });
-    console.log(`[Notification Stub] Sent 'service_job_accepted' notification to provider ${serviceBooking.providerId}`);
 };

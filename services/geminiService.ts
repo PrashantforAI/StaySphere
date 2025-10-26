@@ -6,6 +6,92 @@ import { Message, PropertySearchFilters } from '../types';
 // This is pre-configured and accessible in the execution environment as per project guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+export interface VerificationResult {
+    isDocumentValid: boolean;
+    documentType: string;
+    validationSummary: string;
+    rejectionReason?: string;
+}
+
+/**
+ * Uses Gemini to verify a user-uploaded document.
+ * @param base64Image - The base64 encoded string of the document image.
+ * @param mimeType - The MIME type of the image (e.g., 'image/jpeg').
+ * @param documentDescription - A description of the document being verified (e.g., "Government ID").
+ * @returns A promise that resolves with the structured verification result.
+ */
+export const verifyDocumentWithAI = async (
+    base64Image: string,
+    mimeType: string,
+    documentDescription: string
+): Promise<VerificationResult> => {
+    const model = 'gemini-2.5-flash';
+    const systemInstruction = `You are an expert document verification AI for an Indian platform called StaySphere.
+Your task is to analyze an image of a document and determine if it's a valid, legitimate document of the type described.
+Look for signs of authenticity and common features of the described document type. Be critical but fair.
+Respond ONLY in JSON format according to the provided schema. Do not include any markdown formatting like \`\`\`json.`;
+
+    const imagePart = {
+        inlineData: {
+            mimeType,
+            data: base64Image,
+        },
+    };
+
+    const textPart = {
+        text: `Please verify this document, which is supposed to be a ${documentDescription}.`,
+    };
+    
+    const schema = {
+        type: Type.OBJECT,
+        properties: {
+            isDocumentValid: {
+                type: Type.BOOLEAN,
+                description: "Is the document a recognizable and seemingly valid document of the described type?"
+            },
+            documentType: {
+                type: Type.STRING,
+                description: "The type of document you identified (e.g., 'Aadhaar Card', 'PAN Card', 'Property Deed', 'Unknown')."
+            },
+            validationSummary: {
+                type: Type.STRING,
+                description: "A brief, one-sentence summary of the verification result. Be encouraging on success and clear on failure."
+            },
+            rejectionReason: {
+                type: Type.STRING,
+                description: "If the document is not valid, provide a clear, user-friendly reason (e.g., 'The image is too blurry', 'This does not appear to be a valid document type')."
+            },
+        },
+        required: ["isDocumentValid", "documentType", "validationSummary"],
+    };
+
+    try {
+        const response = await ai.models.generateContent({
+            model,
+            contents: { parts: [imagePart, textPart] },
+            config: {
+                systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: schema,
+            },
+        });
+        
+        const text = response.text.trim();
+        return JSON.parse(text) as VerificationResult;
+
+    } catch (error) {
+        console.error("Error verifying document with Gemini:", error);
+        // Return a structured error response
+        return {
+            isDocumentValid: false,
+            documentType: 'Error',
+            validationSummary: "Could not verify the document due to an AI service error.",
+            rejectionReason: "An unexpected error occurred during verification. Please try again later."
+        };
+    }
+};
+
+
 export const generateConversationSummary = async (messages: Message[]): Promise<string> => {
   if (messages.length === 0) {
     return "No messages in this conversation yet.";

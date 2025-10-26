@@ -9,9 +9,7 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Reverted to using a constructor for state initialization.
-  // The class field approach, while modern, was causing a type error where `this.props` was not recognized.
-  // A standard constructor ensures both `this.state` is initialized and `this.props` is correctly handled via `super(props)`.
+  // FIX: Reverted to a constructor for state initialization to resolve a type error where 'this.props' was not being recognized. The constructor with `super(props)` is the most reliable way to ensure props are correctly initialized.
   constructor(props: Props) {
     super(props);
     this.state = {

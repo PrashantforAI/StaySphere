@@ -20,6 +20,7 @@ const SubscriptionIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="non
 const ServicesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75a4.5 4.5 0 0 1-4.5 4.5H6.75a4.5 4.5 0 0 1-4.5-4.5V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>;
 const ToolboxIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9.75v.255a2.25 2.25 0 0 1-1.125 1.948l-6.75 4.125a2.25 2.25 0 0 1-2.25 0l-6.75-4.125A2.25 2.25 0 0 1 2.25 9.75V9.75m19.5 0-9-5.25m9 5.25-9 5.25m0-5.25-9-5.25m9 5.25V3m0 12.75V21m-6.75-9.75L2.25 9v9.75a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18.75V9" /></svg>;
 const AdminIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.602-3.751m-.225-4.012a12.023 12.023 0 0 0-3.449-3.449L12 2.25" /></svg>;
+const UpgradeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19.5v-15m0 0l-6.75 6.75M12 4.5l6.75 6.75" /></svg>;
 
 
 const LeftPanel: React.FC = () => {
@@ -39,10 +40,19 @@ const LeftPanel: React.FC = () => {
   const navLinkClasses = "flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium";
 
   const renderGuestNav = () => (
-    <ul className="space-y-2">
-      <li><Link to={ROUTES.DASHBOARD} className={navLinkClasses}><DashboardIcon />Dashboard</Link></li>
-      <li><Link to={ROUTES.MY_TRIPS} className={navLinkClasses}><TripsIcon />My Trips</Link></li>
-    </ul>
+    <>
+        <ul className="space-y-2">
+            <li><Link to={ROUTES.DASHBOARD} className={navLinkClasses}><DashboardIcon />Dashboard</Link></li>
+            <li><Link to={ROUTES.MY_TRIPS} className={navLinkClasses}><TripsIcon />My Trips</Link></li>
+        </ul>
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+             <p className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Upgrade Your Account</p>
+             <ul className="space-y-2">
+                 <li><Link to={ROUTES.BECOME_HOST} className={navLinkClasses}><UpgradeIcon />Become a Host</Link></li>
+                 <li><Link to={ROUTES.BECOME_PROVIDER} className={navLinkClasses}><UpgradeIcon />Become a Service Provider</Link></li>
+             </ul>
+        </div>
+    </>
   );
 
   const renderHostNav = () => (
