@@ -145,10 +145,18 @@ export const addMessageToConversation = async (conversationId: string, message: 
   const batch = db.batch();
   
   const messageRef = messagesCollection.doc();
-  batch.set(messageRef, {
+
+  const messageData: any = {
       ...message,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  });
+  };
+
+  // Only include propertyIds if it's defined and not empty
+  if (message.propertyIds && message.propertyIds.length > 0) {
+      messageData.propertyIds = message.propertyIds;
+  }
+
+  batch.set(messageRef, messageData);
   
   batch.update(conversationRef, {
       lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -404,6 +412,20 @@ export const getPropertyById = async (propertyId: string): Promise<Property | nu
     await new Promise(resolve => setTimeout(resolve, 300));
     const property = dummyProperties.find(p => p.propertyId === propertyId);
     return property || null;
+};
+
+
+/**
+ * Fetches multiple properties by their IDs.
+ * NOTE: This simulates a Firestore 'in' query using local dummy data.
+ * @param ids The array of property IDs to fetch.
+ * @returns A promise that resolves to an array of Property objects.
+ */
+export const getPropertiesByIds = async (ids: string[]): Promise<Property[]> => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const foundProperties = dummyProperties.filter(p => ids.includes(p.propertyId));
+    // Maintain the order of the original IDs array
+    return ids.map(id => foundProperties.find(p => p.propertyId === id)).filter(p => p !== undefined) as Property[];
 };
 
 

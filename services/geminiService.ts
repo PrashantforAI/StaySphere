@@ -1,6 +1,6 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { Message, PropertySearchFilters } from '../types';
+import { Message, Property, PropertySearchFilters } from '../types';
+import { dummyProperties } from "../data/dummyData";
 
 // The Gemini API key is obtained from the environment variable `process.env.API_KEY`.
 // This is pre-configured and accessible in the execution environment as per project guidelines.
@@ -118,61 +118,84 @@ export const generateConversationSummary = async (messages: Message[]): Promise<
   }
 };
 
+
+export interface AiChatResponse {
+  text: string;
+  propertyIds?: string[];
+  inferredFilters?: PropertySearchFilters;
+}
+
 /**
- * Parses a user's natural language query to extract structured property search filters.
- * @param query - The user's message to the AI assistant.
- * @returns A promise that resolves with a PropertySearchFilters object or null if no filters are found.
+ * Generates a conversational response from the AI assistant, potentially including property suggestions.
+ * @param messages - The history of messages in the conversation.
+ * @returns A promise that resolves with the AI's response object.
  */
-export const extractSearchFiltersFromQuery = async (query: string): Promise<PropertySearchFilters | null> => {
+export const generateChatResponse = async (messages: Message[]): Promise<AiChatResponse> => {
     const model = 'gemini-2.5-flash';
-    const systemInstruction = `You are a helpful assistant for a vacation rental website in India called StaySphere.
-Your task is to identify and extract property search criteria from the user's message.
-The criteria include location, check-in/check-out dates, number of guests (adults, kids, infants), amenities, price range, and rules like pet-friendliness or dietary options.
-If the user's message seems like a search query, respond with a JSON object containing the extracted filters.
-If the message is just a general greeting or question (e.g., "hello", "how are you?"), respond with an empty JSON object.
 
-Example: "Find me a pet-friendly villa in Lonavala for 4 adults under 20000 with a swimming pool"
-Should result in: { "location": "Lonavala", "guests": { "adults": 4 }, "isPetFriendly": true, "amenities": ["swimming pool"], "priceMax": 20000 }
+    // Provide the AI with the full context of available properties.
+    const propertyContext = JSON.stringify(dummyProperties, null, 2);
 
-Example: "I need a place in Goa for 2 people that allows non-veg food"
-Should result in: { "location": "Goa", "guests": { "adults": 2 }, "isNonVegAllowed": true }
+    // Format the conversation history for the prompt
+    const formattedHistory = messages.map(msg => {
+        return `${msg.senderType}: ${msg.content}`;
+    }).join('\n');
 
-Example: "hello there"
-Should result in: {}
-`;
+    const systemInstruction = `You are Sphere, a friendly AI assistant for StaySphere, a vacation rental platform in India.
+Your goal is to help users find their perfect vacation rental through conversation.
+1.  Analyze the conversation history and the user's latest message.
+2.  From the conversation, infer key search filters: 'location' (city), 'checkIn' (YYYY-MM-DD), 'checkOut' (YYYY-MM-DD), and 'guests' (total number of adults and children). Populate the 'inferredFilters' object with these values if you can determine them.
+3.  Based on the gathered criteria, search the provided JSON array of 'AVAILABLE PROPERTIES'. Find properties that are a good match.
+4.  IMPORTANT: Analyze the last 2-3 messages. If you have ALREADY suggested properties for the current search criteria, DO NOT suggest them again. Instead, provide a conversational follow-up (e.g., "Do any of these catch your eye?") and return an empty 'propertyIds' array.
+5.  If you find NEW, relevant properties, respond with a helpful message (e.g., "I found a few great options for you!") and include their IDs in the 'propertyIds' array. Suggest a maximum of 3 properties at a time.
+6.  If you don't have enough information to perform a good search (e.g., the user just says "I want a villa"), ask clarifying questions to get the location and number of guests. Do not suggest properties if you are unsure.
+7.  If the user asks a specific question about a property (e.g., "Does the Goa villa have a bathtub?"), use the detailed information in the 'AVAILABLE PROPERTIES' JSON to answer accurately.
+8.  You MUST ONLY respond in JSON format according to the provided schema. Do not include any markdown formatting like \`\`\`json.`;
 
     const schema = {
         type: Type.OBJECT,
         properties: {
-            location: { type: Type.STRING, description: 'The city, state, or area the user wants to search in.' },
-            checkIn: { type: Type.STRING, description: 'The check-in date in YYYY-MM-DD format.' },
-            checkOut: { type: Type.STRING, description: 'The check-out date in YYYY-MM-DD format.' },
-            guests: {
-                type: Type.OBJECT,
-                description: 'The number of guests, broken down by age.',
-                properties: {
-                    adults: { type: Type.INTEGER, description: 'Number of adults (age 18+).' },
-                    kids: { type: Type.INTEGER, description: 'Number of kids (age 5-12).' },
-                    infants: { type: Type.INTEGER, description: 'Number of infants (below 5).' },
-                }
-            },
-            amenities: {
+            text: { type: Type.STRING, description: "Your conversational response to the user. This is always required." },
+            propertyIds: {
                 type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: 'A list of amenities requested, like "pool", "wifi", "parking".'
+                description: "An array of propertyId strings that match the user's search query. Only include this if you found relevant properties AND have not recently suggested them.",
+                items: { type: Type.STRING }
             },
-            priceMin: { type: Type.NUMBER, description: "The minimum price per night." },
-            priceMax: { type: Type.NUMBER, description: "The maximum price per night." },
-            isPetFriendly: { type: Type.BOOLEAN, description: "Whether the user wants a pet-friendly property." },
-            isVegAllowed: { type: Type.BOOLEAN, description: "Whether the user requires vegetarian-friendly properties." },
-            isNonVegAllowed: { type: Type.BOOLEAN, description: "Whether the user requires properties that allow non-vegetarian food." },
+            inferredFilters: {
+                type: Type.OBJECT,
+                description: "The search filters you inferred from the conversation.",
+                properties: {
+                    checkIn: { type: Type.STRING, description: "Inferred check-in date in YYYY-MM-DD format." },
+                    checkOut: { type: Type.STRING, description: "Inferred check-out date in YYYY-MM-DD format." },
+                    guests: { 
+                        type: Type.OBJECT,
+                        properties: {
+                            adults: { type: Type.INTEGER, description: "Number of adults." },
+                            kids: { type: Type.INTEGER, description: "Number of children." }
+                        }
+                    }
+                }
+            }
         },
+        required: ["text"]
     };
+
+    const prompt = `
+      AVAILABLE PROPERTIES:
+      ${propertyContext}
+      
+      ---
+
+      Conversation History:
+      ${formattedHistory}
+
+      Your task is to respond to the last message from the 'guest' based on the conversation history and the list of available properties.
+    `;
 
     try {
         const response = await ai.models.generateContent({
             model,
-            contents: query,
+            contents: prompt,
             config: {
                 systemInstruction,
                 responseMimeType: "application/json",
@@ -181,51 +204,13 @@ Should result in: {}
         });
 
         const text = response.text.trim();
-        if (text) {
-             const parsedJson = JSON.parse(text);
-             // Ensure we don't return an empty object if no filters were found
-             if (Object.keys(parsedJson).length > 0) {
-                 return parsedJson;
-             }
-        }
-        return null; // Return null for non-search queries or empty results
-    } catch (error) {
-        console.error("Error extracting filters with Gemini:", error);
-        return null;
-    }
-};
+        return JSON.parse(text) as AiChatResponse;
 
-/**
- * Generates a conversational response from the AI assistant.
- * @param messages - The history of messages in the conversation.
- * @returns A promise that resolves with the AI's text response.
- */
-export const generateChatResponse = async (messages: Message[]): Promise<string> => {
-    const model = 'gemini-2.5-flash';
-
-    // Format the conversation history for the prompt
-    const formattedHistory = messages.map(msg => {
-        return `${msg.senderType}: ${msg.content}`;
-    }).join('\n');
-
-    const prompt = `You are Sphere, a friendly AI assistant for StaySphere, a vacation rental platform in India.
-Continue the following conversation. Keep your responses concise and helpful.
-
-Conversation History:
-${formattedHistory}
-
-Your (ai) response:
-`;
-
-    try {
-        const response = await ai.models.generateContent({
-            model,
-            contents: prompt,
-        });
-        return response.text;
     } catch (error) {
         console.error("Error generating chat response with Gemini:", error);
-        return "I'm having trouble connecting right now. Please try again later.";
+        return {
+            text: "I'm having trouble connecting right now. Please try again later.",
+        };
     }
 };
 

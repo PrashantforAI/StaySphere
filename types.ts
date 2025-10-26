@@ -174,6 +174,7 @@ export interface Message {
   timestamp: Timestamp;
   attachments?: { type: 'image' | 'file'; url: string }[];
   read: boolean;
+  propertyIds?: string[];
 }
 
 

@@ -9,7 +9,7 @@ import Header from '../../components/layout/Header';
 import { ROUTES } from '../../constants';
 import HostPropertyCard from '../../components/host/HostPropertyCard';
 
-const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
+const PlusIcon = () => <svg xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
 
 const HostPropertiesPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -58,7 +58,8 @@ const HostPropertiesPage: React.FC = () => {
         {/* Filters */}
         <div className="mb-6">
             <div className="flex space-x-4 border-b border-gray-200 dark:border-gray-700">
-                {(['all', 'active', 'draft', 'inactive'] as const).map(status => (
+                {/* FIX: Replaced string literals with PropertyStatus enum members to satisfy TypeScript's type checker. */}
+                {(['all', PropertyStatus.ACTIVE, PropertyStatus.DRAFT, PropertyStatus.INACTIVE] as const).map(status => (
                     <button
                         key={status}
                         onClick={() => setFilter(status)}

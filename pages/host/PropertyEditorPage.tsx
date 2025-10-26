@@ -40,14 +40,38 @@ const PropertyEditorPage: React.FC = () => {
       fetchProperty();
     } else {
       // Initialize a new property object for creation
+      // FIX: Provided default values for nested objects to match their type definitions.
       setProperty({
         status: PropertyStatus.DRAFT,
         images: [],
         amenities: [],
-        rules: {},
-        pricing: {},
-        capacity: {},
-        location: {},
+        rules: {
+          checkIn: '14:00',
+          checkOut: '11:00',
+          petFriendly: false,
+          smokingAllowed: false,
+          eventsAllowed: false,
+          vegAllowed: true,
+          nonVegAllowed: true,
+        },
+        pricing: {
+          basePrice: 0,
+          weekendPrice: 0,
+          cleaningFee: 0,
+          securityDeposit: 0,
+        },
+        capacity: {
+          bedrooms: 1,
+          bathrooms: 1,
+          maxGuests: 2,
+        },
+        location: {
+          city: '',
+          area: '',
+          state: '',
+          pincode: '',
+          coordinates: { lat: 0, lng: 0 },
+        },
         availability: { blockedDates: [] },
       });
       setLoading(false);

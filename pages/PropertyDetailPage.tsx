@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { getPropertyById } from '../services/firestoreService';
 import { Property, UserRole } from '../types';
 import Spinner from '../components/ui/Spinner';
@@ -12,14 +12,24 @@ import HostInfoCard from '../components/property/HostInfoCard';
 import BookingWidget from '../components/booking/BookingWidget';
 import { useAuth } from '../hooks/useAuth';
 
-const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>;
+const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>;
 
 const PropertyDetailPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
+  const [searchParams] = useSearchParams();
   const { userProfile } = useAuth();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Pre-fill data from URL
+  const initialBookingData = {
+    checkIn: searchParams.get('checkIn') || '',
+    checkOut: searchParams.get('checkOut') || '',
+    adults: parseInt(searchParams.get('adults') || '1', 10),
+    children: parseInt(searchParams.get('children') || '0', 10),
+    infants: parseInt(searchParams.get('infants') || '0', 10),
+  };
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -116,7 +126,7 @@ const PropertyDetailPage: React.FC = () => {
             {/* Right Column (Booking Widget) */}
             <aside className="lg:col-span-1">
                 {userProfile?.role === UserRole.GUEST ? (
-                    <BookingWidget property={property} />
+                    <BookingWidget property={property} initialData={initialBookingData} />
                 ) : (
                     <div className="sticky top-8 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
                         <h3 className="font-bold text-lg">Booking Information</h3>

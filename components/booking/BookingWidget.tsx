@@ -7,22 +7,29 @@ import { ROUTES } from '../../constants';
 
 interface BookingWidgetProps {
   property: Property;
+  initialData?: {
+      checkIn: string;
+      checkOut: string;
+      adults: number;
+      children: number;
+      infants: number;
+  }
 }
 
 const GUEST_SERVICE_FEE_RATE = 0.05; // 5%
 const GST_RATE = 0.18; // 18%
 
-const BookingWidget: React.FC<BookingWidgetProps> = ({ property }) => {
+const BookingWidget: React.FC<BookingWidgetProps> = ({ property, initialData }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
   const today = new Date().toISOString().split('T')[0];
   
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
+  const [checkIn, setCheckIn] = useState(initialData?.checkIn || '');
+  const [checkOut, setCheckOut] = useState(initialData?.checkOut || '');
+  const [adults, setAdults] = useState(initialData?.adults || 1);
+  const [children, setChildren] = useState(initialData?.children || 0);
+  const [infants, setInfants] = useState(initialData?.infants || 0);
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

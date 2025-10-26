@@ -1,19 +1,21 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
-import { extractSearchFiltersFromQuery, generateChatResponse } from '../../services/geminiService';
-// FIX: Corrected typo in function import from getAiConversationMessages to getConversationMessages.
-import { addMessageToConversation, getConversationMessages, getOrCreateAiConversation } from '../../services/firestoreService';
+import { generateChatResponse, AiChatResponse } from '../../services/geminiService';
+import { addMessageToConversation, getConversationMessages, getOrCreateAiConversation, getPropertiesByIds } from '../../services/firestoreService';
 import { useAuth } from '../../hooks/useAuth';
-import { Message, PropertySearchFilters, UserRole } from '../../types';
+import { Message, Property, PropertySearchFilters, UserRole } from '../../types';
+import ChatPropertyCard from './ChatPropertyCard';
 
 interface ChatInterfaceProps {
-    onAiSearch: (filters: PropertySearchFilters) => void;
-    showHeader?: boolean; // New prop to control header visibility
+    onAiSearch?: (filters: any) => void; // Kept for potential future use, but now handled internally
+    showHeader?: boolean;
 }
 
-// Defines the structure of a single chat message for local state
+// Defines the structure of a single chat message for local state, now with properties and filters
 interface ChatMessage {
     content: string;
     sender: 'user' | 'ai';
+    properties?: Property[];
+    inferredFilters?: PropertySearchFilters;
 }
 
 const PaperAirplaneIcon = () => (
@@ -23,20 +25,14 @@ const PaperAirplaneIcon = () => (
 );
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = true }) => {
-    // FIX: Destructure userProfile to determine the sender's role for chat messages.
     const { currentUser, userProfile } = useAuth();
-    // State to hold the conversation messages
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { content: "Welcome to StaySphere AI! How can I help you plan your perfect vacation today?", sender: 'ai' }
+        { content: "Welcome to StaySphere AI! How can I help you plan your perfect vacation today? You can ask me to find a place, for example: 'Find me a villa in Lonavala for 4 people'.", sender: 'ai' }
     ]);
-    // State for the user's current input
     const [inputValue, setInputValue] = useState('');
-    // State to track if the bot is "thinking"
     const [isTyping, setIsTyping] = useState(false);
-    // State for the Firestore conversation ID
     const [conversationId, setConversationId] = useState<string | null>(null);
 
-    // Ref to the message container for auto-scrolling
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Fetch or create conversation on component mount
@@ -46,11 +42,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
                 try {
                     const convId = await getOrCreateAiConversation(currentUser.uid);
                     setConversationId(convId);
-                    // FIX: Correctly call the imported function 'getConversationMessages'.
                     const history = await getConversationMessages(convId);
-                    // Don't override initial welcome message if history is empty
+                    
                     if (history.length > 0) {
-                        setMessages(history.map(m => ({ content: m.content, sender: m.senderType === 'ai' ? 'ai' : 'user' })));
+                        const richHistory = await Promise.all(history.map(async (msg) => {
+                            const chatMsg: ChatMessage = {
+                                content: msg.content,
+                                sender: msg.senderType === 'ai' ? 'ai' : 'user',
+                            };
+                            if (msg.propertyIds && msg.propertyIds.length > 0) {
+                                chatMsg.properties = await getPropertiesByIds(msg.propertyIds);
+                            }
+                            return chatMsg;
+                        }));
+                        setMessages(richHistory);
                     }
                 } catch (error) {
                     console.error("Error setting up conversation:", error);
@@ -68,7 +73,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         const trimmedInput = inputValue.trim();
-        // FIX: Added userProfile to the guard clause to ensure role is available.
         if (!trimmedInput || !conversationId || !currentUser || !userProfile) return;
 
         const userMessage: ChatMessage = { content: trimmedInput, sender: 'user' };
@@ -76,9 +80,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
         setInputValue('');
         setIsTyping(true);
 
-        // FIX: Determine the correct senderType based on user role. 'user' is not a valid senderType.
-        // Default to 'guest' for any role that isn't 'host'.
-        // FIX: Use UserRole enum members to correctly type the sender's role.
         const userSenderType = userProfile.role === UserRole.HOST ? UserRole.HOST : UserRole.GUEST;
 
         // Save user message to Firestore
@@ -90,35 +91,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
         });
         
         // Create a history snapshot for the Gemini API call
-        // FIX: Map the local sender type 'user' to a valid Message senderType ('guest' or 'host').
         const fullHistoryForGemini: Message[] = [...messages, userMessage].map(m => ({
             content: m.content,
             senderType: m.sender === 'user' ? userSenderType : 'ai',
         } as Message));
 
         try {
-            // First, try to extract search filters
-            const filters = await extractSearchFiltersFromQuery(trimmedInput);
-            let aiResponseText: string;
-
-            if (filters) {
-                // If filters are found, trigger the search in the parent component
-                onAiSearch(filters);
-                aiResponseText = "Great! I've updated the property list based on your request. Let me know if you'd like to make any other changes.";
-            } else {
-                // If no filters are found, get a general conversational response
-                aiResponseText = await generateChatResponse(fullHistoryForGemini);
+            const aiResponse = await generateChatResponse(fullHistoryForGemini);
+            let suggestedProperties: Property[] = [];
+            
+            if (aiResponse.propertyIds && aiResponse.propertyIds.length > 0) {
+                suggestedProperties = await getPropertiesByIds(aiResponse.propertyIds);
             }
             
-            const aiMessage: ChatMessage = { content: aiResponseText, sender: 'ai' };
+            const aiMessage: ChatMessage = { 
+                content: aiResponse.text, 
+                sender: 'ai',
+                properties: suggestedProperties,
+                inferredFilters: aiResponse.inferredFilters,
+            };
             setMessages(prev => [...prev, aiMessage]);
 
-            // Save AI response to Firestore
+            // Save AI text response to Firestore, including propertyIds for persistence
             await addMessageToConversation(conversationId, {
                 senderId: 'ai',
                 senderType: 'ai',
-                content: aiResponseText,
+                content: aiResponse.text,
                 read: true,
+                propertyIds: aiResponse.propertyIds,
             });
 
         } catch (error) {
@@ -135,7 +135,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
       {showHeader && (
         <header className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <h2 className="font-bold text-lg">AI Assistant</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Ask me anything about your trip!</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Your personal vacation planner!</p>
         </header>
       )}
       
@@ -143,7 +143,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
       <div className="flex-grow p-4 overflow-y-auto">
         <div className="flex flex-col space-y-4">
           {messages.map((message, index) => (
-            <div key={index} className={`flex items-start ${message.sender === 'user' ? 'justify-end' : ''}`}>
+            <div key={index} className={`flex flex-col ${message.sender === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`p-3 rounded-lg max-w-xs lg:max-w-md shadow-sm ${
                   message.sender === 'ai'
                     ? 'bg-primary-100 dark:bg-primary-900/50'
@@ -151,6 +151,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
                 }`}>
                 <p className="text-sm">{message.content}</p>
               </div>
+               {message.properties && message.properties.length > 0 && (
+                <div className="mt-2 w-full max-w-md lg:max-w-xl">
+                    <div className="flex gap-4 overflow-x-auto p-2 -mx-2 snap-x snap-mandatory">
+                        {message.properties.map(prop => <ChatPropertyCard key={prop.propertyId} property={prop} filters={message.inferredFilters} />)}
+                    </div>
+                </div>
+              )}
             </div>
           ))}
           {isTyping && (
@@ -164,13 +171,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAiSearch, showHeader = 
               </div>
             </div>
           )}
-          {/* Empty div to act as a scroll target */}
           <div ref={messagesEndRef} />
         </div>
       </div>
       
       {/* Input form */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
         <form onSubmit={handleSubmit} className="flex items-center space-x-2">
           <input
             type="text"
