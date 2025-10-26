@@ -1,6 +1,6 @@
 import { db } from './firebase';
 import firebase from 'firebase/compat/app';
-import { Booking, Notification } from '../types';
+import { Booking, Notification, ServiceBooking } from '../types';
 
 /**
  * Creates a notification document in Firestore.
@@ -88,4 +88,31 @@ export const onPayoutProcessed = async (hostId: string, amount: number, bookingI
         referenceId: bookingIds.length > 0 ? bookingIds[0] : '', // Reference the first booking.
     });
     console.log(`[Notification Stub] Sent 'payout_processed' notification to host ${hostId}`);
+};
+
+
+/**
+ * Sends notifications to relevant providers when a new service request is created.
+ * @param serviceBooking - The new service booking request.
+ */
+export const onServiceRequestCreated = async (serviceBooking: ServiceBooking): Promise<void> => {
+    // In a real app, you'd find providers matching the specialty and location
+    // and create a notification for each of them.
+    console.log(`[Notification Stub] A new service request for '${serviceBooking.serviceType}' on '${serviceBooking.propertyTitle}' was created. Relevant providers should be notified.`);
+};
+
+/**
+ * Sends a notification to a provider when their application for a job is accepted.
+ * @param serviceBooking - The service booking that has been accepted.
+ */
+export const onServiceJobAccepted = async (serviceBooking: ServiceBooking): Promise<void> => {
+    if (!serviceBooking.providerId) return;
+    await createNotification({
+        userId: serviceBooking.providerId,
+        title: 'You got the job!',
+        message: `Your application for the '${serviceBooking.serviceType}' job at '${serviceBooking.propertyTitle}' has been accepted.`,
+        type: 'service_job_accepted',
+        referenceId: serviceBooking.serviceBookingId,
+    });
+    console.log(`[Notification Stub] Sent 'service_job_accepted' notification to provider ${serviceBooking.providerId}`);
 };

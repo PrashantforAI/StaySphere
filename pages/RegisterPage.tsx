@@ -43,8 +43,14 @@ const RegisterPage: React.FC = () => {
 
       // 3. Create user profile in Firestore using the centralized service
       await createUserProfile(user, { displayName, role });
+      
+      // 4. Redirect based on role
+      if (role === UserRole.SERVICE_PROVIDER) {
+        navigate(ROUTES.PROVIDER_ONBOARDING);
+      } else {
+        navigate(ROUTES.DASHBOARD);
+      }
 
-      navigate(ROUTES.DASHBOARD);
     } catch (err: any) {
       if (err.code === 'auth/invalid-api-key' || err.code === 'auth/api-key-not-valid') {
         setError('Firebase configuration error. The API key is invalid. Please check the setup instructions.');

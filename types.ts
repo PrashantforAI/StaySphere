@@ -182,7 +182,7 @@ export interface Notification {
     userId: string; // The user who should see this notification
     title: string;
     message: string;
-    type: "new_booking" | "booking_confirmed" | "booking_cancelled" | "review_request" | "payout_processed";
+    type: "new_booking" | "booking_confirmed" | "booking_cancelled" | "review_request" | "payout_processed" | "new_service_request" | "service_job_accepted";
     referenceId: string; // e.g., bookingId
     isRead: boolean;
     createdAt: Timestamp;
@@ -214,4 +214,55 @@ export interface PaymentHistory {
     status: 'Paid' | 'Failed';
     description: string; // e.g., 'Pro Plan - Monthly Subscription'
     downloadUrl?: string; // Link to a PDF invoice
+}
+
+// --- SERVICE PROVIDER MARKETPLACE TYPES ---
+
+export type ServiceSpecialty = 'cleaning' | 'plumbing' | 'electrical' | 'photography' | 'catering' | 'pest_control';
+
+export interface ServiceProviderProfile {
+    providerId: string; // Same as userProfile.userId
+    displayName: string;
+    profileImage: string;
+    bio: string;
+    specialties: ServiceSpecialty[];
+    serviceLocations: string[]; // e.g., ['Mumbai', 'Thane']
+    basePricing: string; // e.g., "Starts from ₹500/hr"
+    portfolio: { type: 'image' | 'video'; url: string; caption: string }[];
+    verificationStatus: 'pending' | 'approved' | 'rejected';
+    rating: number; // Average rating
+    reviewCount: number;
+}
+
+export enum ServiceBookingStatus {
+    REQUESTED = "requested", // Host has sent a request
+    APPLIED = "applied", // One or more providers have applied
+    ACCEPTED = "accepted", // Host accepted a provider
+    COMPLETED = "completed",
+    CANCELLED = "cancelled",
+}
+
+export interface ServiceBooking {
+    serviceBookingId: string;
+    hostId: string;
+    propertyId: string;
+    propertyTitle: string;
+    providerId?: string; // The provider who was accepted for the job
+    applicants: { providerId: string; providerName: string; providerImage: string }[];
+    serviceType: ServiceSpecialty;
+    requestedDate: string; // YYYY-MM-DD
+    notes: string;
+    status: ServiceBookingStatus;
+    cost?: number;
+    createdAt: Timestamp;
+}
+
+export interface ServiceReview {
+    reviewId: string;
+    hostId: string;
+    providerId: string;
+    serviceBookingId: string;
+    rating: number; // 1-5
+    comment: string;
+    createdAt: Timestamp;
 }

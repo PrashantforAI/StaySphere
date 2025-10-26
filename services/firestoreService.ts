@@ -2,8 +2,8 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from './firebase';
-import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus, Notification, PaymentHistory } from '../types';
-import { dummyProperties, dummyBookings, dummyNotifications, dummyPaymentHistory } from '../data/dummyData';
+import { UserProfile, UserRole, Property, Booking, Message, BookingStatus, PropertyStatus, Notification, PaymentHistory, ServiceProviderProfile, ServiceBooking, ServiceSpecialty } from '../types';
+import { dummyProperties, dummyBookings, dummyNotifications, dummyPaymentHistory, dummyServiceProviders, dummyServiceBookings } from '../data/dummyData';
 
 /**
  * Creates a new user profile document in the Firestore 'users' collection.
@@ -34,6 +34,23 @@ export const createUserProfile = async (user: firebase.User, additionalData: { d
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+
+    // If the user is a service provider, create their provider profile
+    if (additionalData.role === UserRole.SERVICE_PROVIDER) {
+        const providerProfileRef = db.collection('serviceProviders').doc(user.uid);
+        await providerProfileRef.set({
+            providerId: user.uid,
+            displayName: additionalData.displayName,
+            profileImage: user.photoURL || `https://i.pravatar.cc/150?u=${user.uid}`,
+            verificationStatus: 'pending',
+            rating: 0,
+            reviewCount: 0,
+            specialties: [],
+            serviceLocations: [],
+            // Other fields will be added during onboarding
+        }, { merge: true });
+    }
+
   } catch (error) {
     console.error("Error creating user profile in Firestore:", error);
     // Re-throw the error to be handled by the calling function (e.g., in the UI)
@@ -364,4 +381,75 @@ export const getPropertyById = async (propertyId: string): Promise<Property | nu
     await new Promise(resolve => setTimeout(resolve, 300));
     const property = dummyProperties.find(p => p.propertyId === propertyId);
     return property || null;
+};
+
+
+// =================================================================
+// SERVICE PROVIDER MARKETPLACE FUNCTIONS (SIMULATED)
+// =================================================================
+
+/**
+ * Fetches service providers based on optional filters.
+ */
+export const getServiceProviders = async (filters: { specialty?: ServiceSpecialty, location?: string }): Promise<ServiceProviderProfile[]> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    let providers = dummyServiceProviders;
+    if (filters.specialty) {
+        providers = providers.filter(p => p.specialties.includes(filters.specialty!));
+    }
+    if (filters.location) {
+        providers = providers.filter(p => p.serviceLocations.some(l => l.toLowerCase().includes(filters.location!.toLowerCase())));
+    }
+    return providers;
+};
+
+/**
+ * Fetches a single service provider by their ID.
+ */
+export const getServiceProviderById = async (providerId: string): Promise<ServiceProviderProfile | null> => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return dummyServiceProviders.find(p => p.providerId === providerId) || null;
+};
+
+
+/**
+ * Creates a new service request.
+ */
+export const createServiceRequest = async (requestData: Omit<ServiceBooking, 'serviceBookingId' | 'createdAt'>): Promise<string> => {
+    console.log("[SIMULATION] Creating new service request:", requestData);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const newBookingId = `sb_${Math.random().toString(36).substr(2, 9)}`;
+    dummyServiceBookings.push({
+        ...requestData,
+        serviceBookingId: newBookingId,
+        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    });
+    return newBookingId;
+};
+
+/**
+ * Fetches all service bookings requested by a specific host.
+ */
+export const getServiceBookingsForHost = async (hostId: string): Promise<ServiceBooking[]> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return dummyServiceBookings.filter(sb => sb.hostId === hostId)
+        .sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime());
+};
+
+/**
+ * Fetches all service bookings relevant to a specific provider.
+ */
+export const getServiceBookingsForProvider = async (providerId: string): Promise<ServiceBooking[]> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    // Relevant jobs are those the provider has applied to OR has been accepted for.
+    return dummyServiceBookings.filter(sb => sb.providerId === providerId || sb.applicants.some(a => a.providerId === providerId))
+         .sort((a, b) => new Date(b.requestedDate).getTime() - new Date(a.requestedDate).getTime());
+};
+
+/**
+ * Fetches all service requests that are open for applications.
+ */
+export const getOpenServiceRequests = async (): Promise<ServiceBooking[]> => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return dummyServiceBookings.filter(sb => sb.status === 'requested');
 };
