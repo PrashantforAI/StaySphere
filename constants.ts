@@ -9,6 +9,8 @@ export const ROUTES = {
   BOOKING_DETAIL: '/booking/:bookingId',
   PAYMENT: '/payment/:bookingId',
   MY_TRIPS: '/my-trips', // For guests
+  // FIX: Added missing MESSAGES route for guest/general use.
+  MESSAGES: '/messages',
   
   // Host Routes
   HOST_DASHBOARD: '/host/dashboard',

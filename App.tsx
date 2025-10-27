@@ -35,8 +35,8 @@ import BecomeRolePage from './pages/BecomeRolePage';
 import GuestProfilePage from './pages/guest/GuestProfilePage';
 import HostDashboardPage from './pages/host/HostDashboardPage';
 import HostLayout from './components/layout/HostLayout';
-import HostMessagesPage from './pages/host/HostMessagesPage';
 import HostProfilePage from './pages/host/HostProfilePage';
+import MessagesPage from './pages/MessagesPage';
 
 const App: React.FC = () => {
 
@@ -60,6 +60,7 @@ const App: React.FC = () => {
               <Route path={ROUTES.PROFILE} element={<ProtectedRoute><GuestProfilePage /></ProtectedRoute>} />
               <Route path={ROUTES.PROPERTY_DETAIL} element={<ProtectedRoute><PropertyDetailPage /></ProtectedRoute>} />
               <Route path={ROUTES.MY_TRIPS} element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
+              <Route path={ROUTES.MESSAGES} element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path={ROUTES.BOOKING_DETAIL} element={<ProtectedRoute><BookingDetailPage /></ProtectedRoute>} />
               <Route path={ROUTES.BOOKING_CONFIRMATION} element={<ProtectedRoute><BookingConfirmationPage /></ProtectedRoute>} />
               <Route path={ROUTES.PAYMENT} element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
@@ -76,7 +77,7 @@ const App: React.FC = () => {
                 <Route path={ROUTES.HOST_ADD_PROPERTY} element={<ConversationalListingPage />} />
                 <Route path={ROUTES.HOST_EDIT_PROPERTY} element={<ConversationalListingPage />} />
                 <Route path={ROUTES.HOST_BOOKINGS} element={<HostBookingsPage />} />
-                <Route path={ROUTES.HOST_MESSAGES} element={<HostMessagesPage />} />
+                <Route path={ROUTES.HOST_MESSAGES} element={<MessagesPage />} />
                 <Route path={ROUTES.HOST_CALENDAR} element={<PropertyCalendarPage />} />
                 <Route path={ROUTES.HOST_EARNINGS} element={<EarningsPage />} />
                 <Route path={ROUTES.HOST_SUBSCRIPTION} element={<SubscriptionPage />} />
