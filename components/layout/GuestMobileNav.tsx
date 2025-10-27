@@ -1,6 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../constants';
 
-export type GuestMobileView = 'explore' | 'chat' | 'profile';
+export type GuestMobileView = 'explore' | 'chat'; // 'profile' is now a separate page
 
 interface GuestMobileNavProps {
     activeView: GuestMobileView;
@@ -20,6 +22,8 @@ const GuestMobileNav: React.FC<GuestMobileNavProps> = ({ activeView, onNavigate 
     return `${baseClasses} ${activeView === view ? activeClasses : inactiveClasses}`;
   }
   
+  const baseLinkClass = 'flex flex-col items-center justify-center flex-1 py-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200';
+
   return (
     <div className="w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-10 flex-shrink-0">
       <div className="flex justify-around items-center h-16">
@@ -31,10 +35,10 @@ const GuestMobileNav: React.FC<GuestMobileNavProps> = ({ activeView, onNavigate 
           <ChatIcon />
           <span className="text-xs font-medium">AI Chat</span>
         </button>
-        <button className={getButtonClass('profile')} onClick={() => onNavigate('profile')}>
+        <Link to={ROUTES.PROFILE} className={baseLinkClass}>
           <ProfileIcon />
           <span className="text-xs font-medium">Profile</span>
-        </button>
+        </Link>
       </div>
     </div>
   );

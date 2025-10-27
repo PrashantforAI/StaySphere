@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../../components/layout/Header';
 import { useAuth } from '../../hooks/useAuth';
 import { getPaymentHistory } from '../../services/firestoreService';
 import { PaymentHistory } from '../../types';
@@ -68,35 +67,32 @@ const SubscriptionPage: React.FC = () => {
     }, [currentUser]);
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <Header />
-      <main className="container mx-auto p-4 md:p-8">
-        <h1 className="text-3xl font-bold mb-2 text-center">Subscription Plans</h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">Choose the plan that's right for your business.</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans.map(plan => (
-                <div key={plan.name} className={`border rounded-lg p-6 flex flex-col ${plan.current ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                    <h2 className="text-xl font-bold">{plan.name}</h2>
-                    <p className="text-3xl font-extrabold my-4">{plan.price}</p>
-                    <ul className="space-y-2 text-gray-600 dark:text-gray-300 flex-grow">
-                        {plan.features.map(feature => (
-                            <li key={feature} className="flex items-center gap-2">
-                                <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
-                                <span>{feature}</span>
-                            </li>
-                        ))}
-                    </ul>
-                    <button className={`mt-6 w-full py-2 rounded-md font-semibold ${plan.current ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
-                        {plan.current ? 'Your Current Plan' : 'Choose Plan'}
-                    </button>
-                </div>
-            ))}
-        </div>
+    <div className="p-4 md:p-8">
+      <h1 className="text-3xl font-bold mb-2 text-center">Subscription Plans</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">Choose the plan that's right for your business.</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plans.map(plan => (
+              <div key={plan.name} className={`border rounded-lg p-6 flex flex-col ${plan.current ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                  <h2 className="text-xl font-bold">{plan.name}</h2>
+                  <p className="text-3xl font-extrabold my-4">{plan.price}</p>
+                  <ul className="space-y-2 text-gray-600 dark:text-gray-300 flex-grow">
+                      {plan.features.map(feature => (
+                          <li key={feature} className="flex items-center gap-2">
+                              <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
+                              <span>{feature}</span>
+                          </li>
+                      ))}
+                  </ul>
+                  <button className={`mt-6 w-full py-2 rounded-md font-semibold ${plan.current ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'}`}>
+                      {plan.current ? 'Your Current Plan' : 'Choose Plan'}
+                  </button>
+              </div>
+          ))}
+      </div>
 
-        {loading ? <div className="mt-8 flex justify-center"><Spinner /></div> : <InvoiceHistoryTable invoices={invoices} />}
+      {loading ? <div className="mt-8 flex justify-center"><Spinner /></div> : <InvoiceHistoryTable invoices={invoices} />}
 
-      </main>
     </div>
   );
 };

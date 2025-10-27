@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import HomePage from './pages/HomePage';
@@ -18,7 +18,7 @@ import BookingDetailPage from './pages/BookingDetailPage';
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
 import PaymentPage from './pages/PaymentPage';
 import HostPropertiesPage from './pages/host/HostPropertiesPage';
-import PropertyEditorPage from './pages/host/PropertyEditorPage';
+import ConversationalListingPage from './pages/host/ConversationalListingPage';
 import SubscriptionPage from './pages/host/SubscriptionPage';
 import EarningsPage from './pages/host/EarningsPage';
 import PropertyCalendarPage from './pages/host/PropertyCalendarPage';
@@ -32,6 +32,11 @@ import AdminProviderApprovalsPage from './pages/admin/AdminProviderApprovalsPage
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
 import { UserRole } from './types';
 import BecomeRolePage from './pages/BecomeRolePage';
+import GuestProfilePage from './pages/guest/GuestProfilePage';
+import HostDashboardPage from './pages/host/HostDashboardPage';
+import HostLayout from './components/layout/HostLayout';
+import HostMessagesPage from './pages/host/HostMessagesPage';
+import HostProfilePage from './pages/host/HostProfilePage';
 
 const App: React.FC = () => {
 
@@ -52,6 +57,7 @@ const App: React.FC = () => {
               
               {/* --- Protected Guest & General Routes --- */}
               <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              <Route path={ROUTES.PROFILE} element={<ProtectedRoute><GuestProfilePage /></ProtectedRoute>} />
               <Route path={ROUTES.PROPERTY_DETAIL} element={<ProtectedRoute><PropertyDetailPage /></ProtectedRoute>} />
               <Route path={ROUTES.MY_TRIPS} element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
               <Route path={ROUTES.BOOKING_DETAIL} element={<ProtectedRoute><BookingDetailPage /></ProtectedRoute>} />
@@ -63,17 +69,21 @@ const App: React.FC = () => {
               <Route path={ROUTES.BECOME_PROVIDER} element={<RoleProtectedRoute role={UserRole.GUEST}><BecomeRolePage targetRole={UserRole.SERVICE_PROVIDER} /></RoleProtectedRoute>} />
 
 
-              {/* --- Protected Host Routes --- */}
-              <Route path={ROUTES.HOST_DASHBOARD} element={<RoleProtectedRoute role={UserRole.HOST}><HostPropertiesPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_PROPERTIES} element={<RoleProtectedRoute role={UserRole.HOST}><HostPropertiesPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_ADD_PROPERTY} element={<RoleProtectedRoute role={UserRole.HOST}><PropertyEditorPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_EDIT_PROPERTY} element={<RoleProtectedRoute role={UserRole.HOST}><PropertyEditorPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_BOOKINGS} element={<RoleProtectedRoute role={UserRole.HOST}><HostBookingsPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_SUBSCRIPTION} element={<RoleProtectedRoute role={UserRole.HOST}><SubscriptionPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_EARNINGS} element={<RoleProtectedRoute role={UserRole.HOST}><EarningsPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_CALENDAR} element={<RoleProtectedRoute role={UserRole.HOST}><PropertyCalendarPage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_SERVICE_MARKETPLACE} element={<RoleProtectedRoute role={UserRole.HOST}><ServiceMarketplacePage /></RoleProtectedRoute>} />
-              <Route path={ROUTES.HOST_SERVICE_ORDERS} element={<RoleProtectedRoute role={UserRole.HOST}><HostServiceOrdersPage /></RoleProtectedRoute>} />
+              {/* --- Protected Host Routes (with dedicated layout) --- */}
+              <Route element={<RoleProtectedRoute role={UserRole.HOST}><HostLayout /></RoleProtectedRoute>}>
+                <Route path={ROUTES.HOST_DASHBOARD} element={<HostDashboardPage />} />
+                <Route path={ROUTES.HOST_PROPERTIES} element={<HostPropertiesPage />} />
+                <Route path={ROUTES.HOST_ADD_PROPERTY} element={<ConversationalListingPage />} />
+                <Route path={ROUTES.HOST_EDIT_PROPERTY} element={<ConversationalListingPage />} />
+                <Route path={ROUTES.HOST_BOOKINGS} element={<HostBookingsPage />} />
+                <Route path={ROUTES.HOST_MESSAGES} element={<HostMessagesPage />} />
+                <Route path={ROUTES.HOST_CALENDAR} element={<PropertyCalendarPage />} />
+                <Route path={ROUTES.HOST_EARNINGS} element={<EarningsPage />} />
+                <Route path={ROUTES.HOST_SUBSCRIPTION} element={<SubscriptionPage />} />
+                <Route path={ROUTES.HOST_SERVICE_MARKETPLACE} element={<ServiceMarketplacePage />} />
+                <Route path={ROUTES.HOST_SERVICE_ORDERS} element={<HostServiceOrdersPage />} />
+                <Route path={ROUTES.HOST_PROFILE} element={<HostProfilePage />} />
+              </Route>
               
               {/* --- Protected Service Provider Routes --- */}
               <Route path={ROUTES.PROVIDER_DASHBOARD} element={<RoleProtectedRoute role={UserRole.SERVICE_PROVIDER}><ProviderDashboardPage/></RoleProtectedRoute>} />

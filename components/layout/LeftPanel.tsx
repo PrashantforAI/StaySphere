@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 // FIX: Removed modular import for signOut, as it will be called as a method on the auth object.
@@ -10,7 +9,7 @@ import { UserRole } from '../../types';
 
 const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>;
 const LogoutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>;
-const TripsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664l.143.258a1.107 1.107 0 0 0 1.57 1.098l.218-.104a1.107 1.107 0 0 0 .57-1.664c-.352-.622-.242-1.38.216-1.92l.51-.766c.32-.48.414-1.121.216-1.49l-1.068-.89a1.125 1.125 0 0 1-.405-.864v-.568a1.125 1.125 0 0 1 2.25 0v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664l.143.258a1.107 1.107 0 0 0 1.57 1.098l.218-.104a1.107 1.107 0 0 0 .57-1.664c-.352-.622-.242-1.38.216-1.92l.51-.766c.32-.48.414-1.121.216-1.49l-1.068-.89a1.125 1.125 0 0 1-.405-.864v-.568a1.125 1.125 0 0 1 2.25 0v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664l.143.258a1.107 1.107 0 0 0 1.57 1.098l.218-.104a1.107 1.107 0 0 0 .57-1.664c-.352-.622-.242-1.38.216-1.92l.51-.766c.32-.48-.414-1.121.216-1.49l-1.068-.89a1.125 1.125 0 0 1-.405-.864v-.568a1.125 1.125 0 0 1 2.25 0ZM4.5 21.75v-5.172c0-.334.148-.65.405-.864l1.068-.89c.442-.369.535-1.01.216-1.49l-.51-.766a2.25 2.25 0 0 1-1.161-.886l-.143-.048a1.107 1.107 0 0 0-1.57 1.098l-.218.104a1.107 1.107 0 0 0-.57 1.664c.352.622.242 1.38-.216 1.92l-.51.766c-.32.48-.414 1.121-.216 1.49l1.068.89c.257.214.405.53.405.864v5.172a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1 0-4.5h.75a2.25 2.25 0 0 1 2.25 2.25v3.375Z" /></svg>;
+const TripsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664l.143.258a1.107 1.107 0 0 0 1.57 1.098l.218-.104a1.107 1.107 0 0 0 .57-1.664c-.352-.622-.242-1.38.216-1.92l.51-.766c.32-.48.414-1.121.216-1.49l-1.068-.89a1.125 1.125 0 0 1-.405-.864v-.568a1.125 1.125 0 0 1 2.25 0v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664l.143.258a1.107 1.107 0 0 0 1.57 1.098l.218-.104a1.107 1.107 0 0 0 .57-1.664c-.352-.622-.242-1.38.216-1.92l.51-.766c.32-.48.414-1.121.216-1.49l-1.068-.89a1.125 1.125 0 0 1-.405-.864v-.568a1.125 1.125 0 0 1 2.25 0v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664l.143.258a1.107 1.107 0 0 0 1.57 1.098l.218-.104a1.107 1.107 0 0 0 .57-1.664c-.352-.622-.242-1.38.216-1.92l.51-.766c.32-.48-.414-1.121.216-1.49l-1.068-.89a1.125 1.125 0 0 1-.405-.864v-.568a1.125 1.125 0 0 1 2.25 0ZM4.5 21.75v-5.172c0-.334.148-.65.405-.864l1.068-.89c.442-.369.535-1.01.216-1.49l-.51-.766a2.25 2.25 0 0 1-1.161-.886l-.143-.048a1.107 1.107 0 0 0-1.57 1.098l-.218.104a1.107 1.107 0 0 0-.57 1.664c.352.622.242 1.38-.216 1.92l-.51.766c-.32.48-.414-1.121-.216 1.49l1.068.89c.257.214.405.53.405.864v5.172a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1 0-4.5h.75a2.25 2.25 0 0 1 2.25 2.25v3.375Z" /></svg>;
 const BookingsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.75h16.5m-16.5 3.75h16.5M3.75 17.25h16.5M4.5 12a7.5 7.5 0 0 1 15 0v-1.5a7.5 7.5 0 0 1-15 0v1.5Zm0-1.5a2.25 2.25 0 0 0-2.25 2.25v1.5a2.25 2.25 0 0 0 2.25 2.25m15 0a2.25 2.25 0 0 0 2.25-2.25v-1.5a2.25 2.25 0 0 0-2.25-2.25m-15 0h15" /></svg>;
 const DashboardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" /></svg>;
 const PropertiesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m-3-1L9.75 3l-3.75 3.75M3 13.5l6.75-2.5" /></svg>;
@@ -21,6 +20,7 @@ const ServicesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" v
 const ToolboxIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9.75v.255a2.25 2.25 0 0 1-1.125 1.948l-6.75 4.125a2.25 2.25 0 0 1-2.25 0l-6.75-4.125A2.25 2.25 0 0 1 2.25 9.75V9.75m19.5 0-9-5.25m9 5.25-9 5.25m0-5.25-9-5.25m9 5.25V3m0 12.75V21m-6.75-9.75L2.25 9v9.75a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18.75V9" /></svg>;
 const AdminIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.602-3.751m-.225-4.012a12.023 12.023 0 0 0-3.449-3.449L12 2.25" /></svg>;
 const UpgradeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19.5v-15m0 0l-6.75 6.75M12 4.5l6.75 6.75" /></svg>;
+const ProfileIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-3"><path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>;
 
 
 const LeftPanel: React.FC = () => {
@@ -44,6 +44,7 @@ const LeftPanel: React.FC = () => {
         <ul className="space-y-2">
             <li><Link to={ROUTES.DASHBOARD} className={navLinkClasses}><DashboardIcon />Dashboard</Link></li>
             <li><Link to={ROUTES.MY_TRIPS} className={navLinkClasses}><TripsIcon />My Trips</Link></li>
+            <li><Link to={ROUTES.PROFILE} className={navLinkClasses}><ProfileIcon />My Profile</Link></li>
         </ul>
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
              <p className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Upgrade Your Account</p>
@@ -65,6 +66,7 @@ const LeftPanel: React.FC = () => {
       <li className="pt-2 border-t border-gray-200 dark:border-gray-600"><Link to={ROUTES.HOST_SERVICE_MARKETPLACE} className={navLinkClasses}><ToolboxIcon />Service Marketplace</Link></li>
       <li><Link to={ROUTES.HOST_SERVICE_ORDERS} className={navLinkClasses}><ServicesIcon />My Service Orders</Link></li>
       <li className="pt-2 border-t border-gray-200 dark:border-gray-600"><Link to={ROUTES.HOST_SUBSCRIPTION} className={navLinkClasses}><SubscriptionIcon />Subscription</Link></li>
+      <li className="pt-2 border-t border-gray-200 dark:border-gray-600"><Link to={ROUTES.PROFILE} className={navLinkClasses}><ProfileIcon />My Profile</Link></li>
     </ul>
   );
 
@@ -72,6 +74,7 @@ const LeftPanel: React.FC = () => {
     <ul className="space-y-2">
         <li><Link to={ROUTES.PROVIDER_DASHBOARD} className={navLinkClasses}><DashboardIcon />Dashboard</Link></li>
         <li><Link to={ROUTES.PROVIDER_JOBS} className={navLinkClasses}><ToolboxIcon />My Jobs</Link></li>
+        <li><Link to={ROUTES.PROFILE} className={navLinkClasses}><ProfileIcon />My Profile</Link></li>
     </ul>
   );
   
@@ -79,6 +82,7 @@ const LeftPanel: React.FC = () => {
     <ul className="space-y-2">
         <li><Link to={ROUTES.ADMIN_DASHBOARD} className={navLinkClasses}><AdminIcon />Admin Dashboard</Link></li>
         <li><Link to={ROUTES.ADMIN_PROVIDER_APPROVALS} className={navLinkClasses}><UserIcon />Provider Approvals</Link></li>
+        <li><Link to={ROUTES.PROFILE} className={navLinkClasses}><ProfileIcon />My Profile</Link></li>
     </ul>
   );
 

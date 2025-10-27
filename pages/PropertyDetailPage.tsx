@@ -12,7 +12,7 @@ import HostInfoCard from '../components/property/HostInfoCard';
 import BookingWidget from '../components/booking/BookingWidget';
 import { useAuth } from '../hooks/useAuth';
 
-const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>;
+const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>;
 
 const PropertyDetailPage: React.FC = () => {
   const { propertyId } = useParams<{ propertyId: string }>();
@@ -85,6 +85,8 @@ const PropertyDetailPage: React.FC = () => {
   const bboxPadding = 0.008; // This value controls the zoom level.
   const bbox = `${lng - bboxPadding},${lat - bboxPadding},${lng + bboxPadding},${lat + bboxPadding}`;
   const osmEmbedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+  // FIX: Flatten the categorized amenities object into a single array for the AmenitiesGrid component.
+  const allAmenities = Object.values(property.amenities).flat();
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -116,7 +118,7 @@ const PropertyDetailPage: React.FC = () => {
                 
                 <div className="my-8 border-t border-gray-200 dark:border-gray-700"></div>
 
-                <AmenitiesGrid amenities={property.amenities} />
+                <AmenitiesGrid amenities={allAmenities} />
                 
                 <div className="my-8 border-t border-gray-200 dark:border-gray-700"></div>
 

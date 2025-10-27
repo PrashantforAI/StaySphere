@@ -10,13 +10,16 @@ import { dummyProperties } from '../data/dummyData';
 import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../constants';
 import GuestMobileNav, { GuestMobileView } from '../components/layout/GuestMobileNav';
+import GuestProfilePage from './guest/GuestProfilePage';
+import Spinner from '../components/ui/Spinner';
 
 const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
 
 export type SortOrder = 'default' | 'price_asc' | 'price_desc';
 
 const DashboardPage: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   
   // States for property search and display (used by both layouts)
   const [allProperties] = useState(dummyProperties);
@@ -32,6 +35,27 @@ const DashboardPage: React.FC = () => {
 
   // Guest-specific states
   const [guestView, setGuestView] = useState<GuestMobileView>('chat');
+
+  // Effect to redirect non-guest users to their respective dashboards
+  useEffect(() => {
+    if (!authLoading && userProfile) {
+        switch (userProfile.role) {
+            case UserRole.HOST:
+                navigate(ROUTES.HOST_DASHBOARD, { replace: true });
+                break;
+            case UserRole.ADMIN:
+                navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
+                break;
+            case UserRole.SERVICE_PROVIDER:
+                navigate(ROUTES.PROVIDER_DASHBOARD, { replace: true });
+                break;
+            case UserRole.GUEST:
+                // Guests stay here, no action needed.
+                break;
+        }
+    }
+  }, [userProfile, authLoading, navigate]);
+
 
   // Effect to apply filters and sorting whenever they change
   useEffect(() => {
@@ -83,80 +107,43 @@ const DashboardPage: React.FC = () => {
     setFilters({});
   };
 
-  // ======================================================================
-  // GUEST-SPECIFIC RENDER
-  // ======================================================================
-  if (userProfile?.role === UserRole.GUEST) {
-    const renderGuestContent = () => {
-        switch (guestView) {
-            case 'chat':
-                return <ChatInterface showHeader={false} />;
-            case 'explore':
-                return <RightPanel
-                    properties={filteredProperties}
-                    onManualSearch={handleManualSearch}
-                    searchMode={searchMode}
-                    isLoading={isLoading}
-                    onModeToggle={handleModeToggle}
-                    sortOrder={sortOrder}
-                    onSortChange={setSortOrder}
-                />;
-            case 'profile':
-                return <LeftPanel />;
-            default:
-                return <ChatInterface showHeader={false} />;
-        }
-    };
-
+  if (authLoading || (userProfile && userProfile.role !== UserRole.GUEST)) {
     return (
-        <div className="h-screen w-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-            <div className="flex-grow overflow-y-auto">
-                {renderGuestContent()}
-            </div>
-            <GuestMobileNav activeView={guestView} onNavigate={setGuestView} />
-        </div>
+      <div className="h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
     );
   }
 
   // ======================================================================
-  // HOST, ADMIN, SP RENDER (Original Layout)
+  // GUEST-SPECIFIC RENDER
   // ======================================================================
-  const renderMobileContent = () => {
-    switch (mobileView) {
-      case 'main':
-        return <RightPanel properties={filteredProperties} onManualSearch={handleManualSearch} searchMode={searchMode} isLoading={isLoading} onModeToggle={handleModeToggle} sortOrder={sortOrder} onSortChange={setSortOrder} />;
-      case 'profile':
-        return <LeftPanel />;
-      default:
-        return <RightPanel properties={filteredProperties} onManualSearch={handleManualSearch} searchMode={searchMode} isLoading={isLoading} onModeToggle={handleModeToggle} sortOrder={sortOrder} onSortChange={setSortOrder} />;
-    }
+  const renderGuestContent = () => {
+      switch (guestView) {
+          case 'chat':
+              return <ChatInterface showHeader={false} />;
+          case 'explore':
+              return <RightPanel
+                  properties={filteredProperties}
+                  onManualSearch={handleManualSearch}
+                  searchMode={searchMode}
+                  isLoading={isLoading}
+                  onModeToggle={handleModeToggle}
+                  sortOrder={sortOrder}
+                  onSortChange={setSortOrder}
+              />;
+          default:
+              return <ChatInterface showHeader={false} />;
+      }
   };
 
   return (
-    <div className="h-screen w-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
-      <div className="hidden md:grid md:grid-cols-10 h-full">
-        <div className="md:col-span-2"><LeftPanel /></div>
-        <div className="md:col-span-4"><CenterPanel onAiSearch={handleAiSearch} /></div>
-        <div className="md:col-span-4"><RightPanel properties={filteredProperties} onManualSearch={handleManualSearch} searchMode={searchMode} isLoading={isLoading} onModeToggle={handleModeToggle} sortOrder={sortOrder} onSortChange={setSortOrder} /></div>
+      <div className="h-screen w-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
+          <div className="flex-grow overflow-y-auto">
+              {renderGuestContent()}
+          </div>
+          <GuestMobileNav activeView={guestView} onNavigate={setGuestView} />
       </div>
-      <div className="md:hidden h-full flex flex-col">
-        <div className="flex-grow overflow-y-auto pb-16 text-gray-900 dark:text-gray-100">{renderMobileContent()}</div>
-        <MobileNav activeView={mobileView} onNavigate={setMobileView} onChatClick={() => setIsChatOpen(true)} />
-        {isChatOpen && (
-            <div className="md:hidden fixed inset-0 bg-gray-100 dark:bg-gray-900 z-50 flex flex-col animate-slide-in-up">
-                <div className="flex-grow overflow-hidden">
-                     <ChatInterface onAiSearch={handleAiSearch} showHeader={false} />
-                </div>
-                <div className="p-2 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                   <button onClick={() => setIsChatOpen(false)} className="w-full flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">
-                        <CloseIcon />
-                        <span className="ml-2 font-semibold">Close Chat</span>
-                    </button>
-                </div>
-            </div>
-        )}
-      </div>
-    </div>
   );
 };
 

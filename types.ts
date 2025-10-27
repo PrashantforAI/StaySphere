@@ -18,6 +18,9 @@ export interface UserProfile {
   role: UserRole;
   displayName: string;
   profileImage?: string;
+  bio?: string;
+  location?: string;
+  interests?: string[];
   verificationStatus: boolean;
   createdAt: Timestamp;
   lastLogin: Timestamp;
@@ -37,7 +40,13 @@ export enum PropertyType {
 export enum PropertyStatus {
     DRAFT = "draft",
     ACTIVE = "active",
-    INACTIVE = "inactive"
+    INACTIVE = "inactive",
+    IN_PROGRESS = "in_progress", // For conversational listing
+}
+
+export interface Bed {
+    type: 'single' | 'double' | 'queen' | 'king';
+    count: number;
 }
 
 // Added HostProfile and Review types to enrich property data
@@ -59,6 +68,18 @@ export interface Review {
   createdAt: Timestamp;
 }
 
+export interface AiImageAnalysis {
+    suggestedCaption: string;
+    roomType: string;
+    detectedFeatures: string[];
+}
+
+export interface PropertyImage {
+    url: string;
+    caption: string;
+    order: number;
+    aiAnalysis?: AiImageAnalysis;
+}
 
 export interface Property {
   propertyId: string;
@@ -84,9 +105,10 @@ export interface Property {
     bedrooms: number;
     bathrooms: number;
     maxGuests: number;
+    beds: Bed[]; // More detailed bed info
   };
-  amenities: string[];
-  images: { url: string; caption: string; order: number }[];
+  amenities: Record<string, string[]>; // Categorized amenities
+  images: PropertyImage[];
   rules: {
     checkIn: string;
     checkOut: string;
@@ -95,6 +117,11 @@ export interface Property {
     eventsAllowed: boolean;
     vegAllowed: boolean;
     nonVegAllowed: boolean;
+  };
+  additionalInfo: {
+    houseManual?: string;
+    gettingAround?: string;
+    thingsToNote?: string;
   };
   availability: {
     calendarSyncUrl?: string;
@@ -175,6 +202,9 @@ export interface Message {
   attachments?: { type: 'image' | 'file'; url: string }[];
   read: boolean;
   propertyIds?: string[];
+  // Added for conversational listing
+  isListingQuestion?: boolean; 
+  listingData?: Partial<Property>;
 }
 
 
@@ -215,6 +245,13 @@ export interface PaymentHistory {
     status: 'Paid' | 'Failed';
     description: string; // e.g., 'Pro Plan - Monthly Subscription'
     downloadUrl?: string; // Link to a PDF invoice
+}
+
+export interface HostInsight {
+  title: string;
+  message: string;
+  ctaLink?: string;
+  ctaText?: string;
 }
 
 // --- SERVICE PROVIDER MARKETPLACE TYPES ---

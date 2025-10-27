@@ -1,4 +1,11 @@
-import { Booking, BookingStatus, PaymentStatus, Property, Review, Notification, PaymentHistory } from "../types";
+import { Booking, BookingStatus, PaymentStatus, Property, Review, Notification, PaymentHistory, PropertyStatus } from "../types";
+
+const nowInSeconds = Math.floor(Date.now() / 1000);
+const createMockTimestamp = (offsetSeconds = 0) => ({
+    seconds: nowInSeconds - offsetSeconds,
+    nanoseconds: 0
+});
+
 
 // Dummy host profiles
 const dummyHosts = {
@@ -20,8 +27,8 @@ const dummyHosts = {
 
 // Dummy reviews
 const dummyReviews: Review[] = [
-    { reviewId: 'rev001', guestId: 'guest001', guestName: 'Anjali Sharma', guestImage: 'https://i.pravatar.cc/150?u=guest001', rating: 5, comment: 'Absolutely stunning villa with breathtaking views. The host was incredibly helpful. A perfect getaway!', createdAt: {} as any },
-    { reviewId: 'rev002', guestId: 'guest002', guestName: 'Vikram Singh', guestImage: 'https://i.pravatar.cc/150?u=guest002', rating: 4, comment: 'Great location and very clean. The pool was fantastic. Would recommend!', createdAt: {} as any },
+    { reviewId: 'rev001', guestId: 'guest001', guestName: 'Anjali Sharma', guestImage: 'https://i.pravatar.cc/150?u=guest001', rating: 5, comment: 'Absolutely stunning villa with breathtaking views. The host was incredibly helpful. A perfect getaway!', createdAt: createMockTimestamp(86400 * 2) as any },
+    { reviewId: 'rev002', guestId: 'guest002', guestName: 'Vikram Singh', guestImage: 'https://i.pravatar.cc/150?u=guest002', rating: 4, comment: 'Great location and very clean. The pool was fantastic. Would recommend!', createdAt: createMockTimestamp(86400 * 5) as any },
 ];
 
 
@@ -43,11 +50,18 @@ export const dummyProperties: Property[] = [
         { url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop', caption: 'Living room', order: 3 },
     ],
     ratings: { average: 4.9, count: 120 }, 
-    capacity: { maxGuests: 8, bedrooms: 4, bathrooms: 4 }, 
-    amenities: ['pool', 'wifi', 'beach access', 'ac', 'kitchen', 'parking', 'tv', 'balcony'],
+    capacity: { maxGuests: 8, bedrooms: 4, bathrooms: 4, beds: [{type: 'king', count: 4}] }, 
+    amenities: {
+        'Featured': ['Pool', 'Wifi', 'Beach access', 'AC'],
+        'Kitchen & Dining': ['Kitchen', 'Refrigerator', 'Microwave'],
+        'Entertainment': ['TV', 'Sound System'],
+        'Parking & Facilities': ['Free parking on premises'],
+        'Safety': ['Fire extinguisher', 'First aid kit']
+    },
     rules: { petFriendly: true, vegAllowed: true, nonVegAllowed: true, smokingAllowed: false, eventsAllowed: true, checkIn: '14:00', checkOut: '11:00' },
     availability: { blockedDates: [{start: '2024-12-24', end: '2024-12-26', reason: 'owner stay'}] },
     reviews: dummyReviews,
+    additionalInfo: {},
   },
   {
     propertyId: 'prop002', hostId: 'host@staysphere.com',
@@ -58,11 +72,16 @@ export const dummyProperties: Property[] = [
     pricing: { basePrice: 8500, weekendPrice: 10000, cleaningFee: 500, securityDeposit: 3000 },
     images: [{ url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=2070&auto=format&fit=crop', caption: 'Cottage view', order: 1 }],
     ratings: { average: 4.8, count: 95 }, 
-    capacity: { maxGuests: 4, bedrooms: 2, bathrooms: 1 }, 
-    amenities: ['wifi', 'heating', 'kitchen', 'fireplace', 'garden'],
+    capacity: { maxGuests: 4, bedrooms: 2, bathrooms: 1, beds: [{type: 'queen', count: 2}] }, 
+    amenities: {
+        'Featured': ['Wifi', 'Heating', 'Fireplace'],
+        'Kitchen & Dining': ['Kitchen', 'Kettle'],
+        'Outdoor': ['Garden', 'Bonfire area']
+    },
     rules: { petFriendly: true, vegAllowed: true, nonVegAllowed: false, smokingAllowed: true, eventsAllowed: false, checkIn: '13:00', checkOut: '12:00' },
     availability: { blockedDates: [] },
     reviews: [],
+    additionalInfo: {},
   },
   {
     propertyId: 'prop003', hostId: 'host@staysphere.com',
@@ -73,11 +92,15 @@ export const dummyProperties: Property[] = [
     pricing: { basePrice: 12000, weekendPrice: 13500, cleaningFee: 800, securityDeposit: 6000 },
     images: [{ url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop', caption: 'Living room', order: 1 }],
     ratings: { average: 4.7, count: 210 }, 
-    capacity: { maxGuests: 3, bedrooms: 1, bathrooms: 1 }, 
-    amenities: ['wifi', 'ac', 'gym', 'pool', 'elevator'],
+    capacity: { maxGuests: 3, bedrooms: 1, bathrooms: 1, beds: [{type: 'king', count: 1}] }, 
+    amenities: {
+        'Featured': ['Wifi', 'AC', 'Pool', 'Gym'],
+        'Parking & Facilities': ['Elevator', 'Paid parking off premises']
+    },
     rules: { petFriendly: false, vegAllowed: true, nonVegAllowed: true, smokingAllowed: false, eventsAllowed: false, checkIn: '15:00', checkOut: '10:00' },
     availability: { blockedDates: [] },
     reviews: [dummyReviews[1]],
+    additionalInfo: {},
   },
   {
     propertyId: 'prop004', hostId: 'host@staysphere.com',
@@ -88,11 +111,15 @@ export const dummyProperties: Property[] = [
     pricing: { basePrice: 22000, weekendPrice: 25000, cleaningFee: 1500, securityDeposit: 10000 },
     images: [{ url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=2070&auto=format&fit=crop', caption: 'Exterior view', order: 1 }],
     ratings: { average: 4.9, count: 150 }, 
-    capacity: { maxGuests: 6, bedrooms: 3, bathrooms: 3 }, 
-    amenities: ['pool', 'wifi', 'lake view', 'ac', 'parking', 'jacuzzi'],
+    capacity: { maxGuests: 6, bedrooms: 3, bathrooms: 3, beds: [{type: 'king', count: 3}] }, 
+    amenities: {
+        'Featured': ['Pool', 'Wifi', 'Lake view', 'AC', 'Jacuzzi'],
+        'Parking & Facilities': ['Free parking on premises']
+    },
     rules: { petFriendly: false, vegAllowed: true, nonVegAllowed: true, smokingAllowed: false, eventsAllowed: true, checkIn: '14:00', checkOut: '11:00' },
     availability: { blockedDates: [] },
     reviews: [],
+    additionalInfo: {},
   },
   {
     propertyId: 'prop005', hostId: 'host@staysphere.com',
@@ -103,14 +130,19 @@ export const dummyProperties: Property[] = [
     pricing: { basePrice: 18000, weekendPrice: 21000, cleaningFee: 1200, securityDeposit: 8000 },
     images: [{ url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop', caption: 'Pool area', order: 1 }],
     ratings: { average: 4.8, count: 75 }, 
-    capacity: { maxGuests: 10, bedrooms: 5, bathrooms: 5 }, 
-    amenities: ['pool', 'wifi', 'parking', 'ac', 'kitchen', 'garden'],
+    capacity: { maxGuests: 10, bedrooms: 5, bathrooms: 5, beds: [{type: 'queen', count: 5}] }, 
+    amenities: {
+        'Featured': ['Pool', 'Wifi', 'AC', 'Garden'],
+        'Kitchen & Dining': ['Kitchen'],
+        'Parking & Facilities': ['Free parking on premises']
+    },
     rules: { petFriendly: true, vegAllowed: true, nonVegAllowed: true, smokingAllowed: true, eventsAllowed: true, checkIn: '12:00', checkOut: '10:00' },
     availability: { blockedDates: [] },
     reviews: [dummyReviews[0]],
+    additionalInfo: {},
   },
   // Add other properties with host and reviews...
-].map(p => ({ ...p, propertyType: 'villa', status: 'active', subscriptionTier: 'pro', createdAt: {} as any, updatedAt: {} as any } as Property));
+].map(p => ({ ...p, propertyType: 'villa', status: PropertyStatus.ACTIVE, subscriptionTier: 'pro', createdAt: createMockTimestamp(86400 * 30), updatedAt: createMockTimestamp(86400 * 7) } as any as Property));
 
 
 /**
@@ -132,7 +164,7 @@ export const dummyBookings: Booking[] = [
         pricing: { nights: 5, subtotal: 75000, cleaningFee: 1000, platformFee: 3750, gst: 675, total: 80425 },
         // FIX: Used PaymentStatus enum instead of string literal.
         payment: { status: PaymentStatus.PAID, amount: 80425, currency: 'INR' },
-        createdAt: {} as any, updatedAt: {} as any
+        createdAt: createMockTimestamp(86400 * 10) as any, updatedAt: createMockTimestamp(86400 * 3) as any
     },
     {
         bookingId: 'book002',
@@ -148,7 +180,7 @@ export const dummyBookings: Booking[] = [
         pricing: { nights: 3, subtotal: 54000, cleaningFee: 1200, platformFee: 2700, gst: 486, total: 58386 },
         // FIX: Used PaymentStatus enum instead of string literal.
         payment: { status: PaymentStatus.PAID, amount: 58386, currency: 'INR' },
-        createdAt: {} as any, updatedAt: {} as any
+        createdAt: createMockTimestamp(86400 * 40) as any, updatedAt: createMockTimestamp(86400 * 30) as any
     },
     {
         bookingId: 'book003',
@@ -164,7 +196,7 @@ export const dummyBookings: Booking[] = [
         pricing: { nights: 3, subtotal: 25500, cleaningFee: 500, platformFee: 1275, gst: 229.5, total: 27504.5 },
         // FIX: Used PaymentStatus enum instead of string literal.
         payment: { status: PaymentStatus.PAID, amount: 27504.5, currency: 'INR' },
-        createdAt: {} as any, updatedAt: {} as any
+        createdAt: createMockTimestamp(86400 * 5) as any, updatedAt: createMockTimestamp(86400 * 1) as any
     },
     {
         bookingId: 'book004',
@@ -180,7 +212,7 @@ export const dummyBookings: Booking[] = [
         pricing: { nights: 5, subtotal: 60000, cleaningFee: 800, platformFee: 3000, gst: 540, total: 64340 },
         // FIX: Used PaymentStatus enum instead of string literal.
         payment: { status: PaymentStatus.PENDING, amount: 64340, currency: 'INR' },
-        createdAt: {} as any, updatedAt: {} as any
+        createdAt: createMockTimestamp(3600) as any, updatedAt: createMockTimestamp(3600) as any
     },
     {
         bookingId: 'book005',
@@ -196,7 +228,7 @@ export const dummyBookings: Booking[] = [
         pricing: { nights: 5, subtotal: 110000, cleaningFee: 1500, platformFee: 5500, gst: 990, total: 117990 },
         // FIX: Used PaymentStatus enum instead of string literal.
         payment: { status: PaymentStatus.PAID, amount: 117990, currency: 'INR' },
-        createdAt: {} as any, updatedAt: {} as any
+        createdAt: createMockTimestamp(86400 * 4) as any, updatedAt: createMockTimestamp(86400 * 2) as any
     }
 ];
 

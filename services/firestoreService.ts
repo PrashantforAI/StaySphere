@@ -43,6 +43,21 @@ export const createUserProfile = async (user: firebase.User, additionalData: { d
 };
 
 /**
+ * Updates an existing user profile document in Firestore.
+ * @param userId - The ID of the user to update.
+ * @param data - An object containing the fields to update.
+ */
+export const updateUserProfile = async (userId: string, data: Partial<UserProfile>): Promise<void> => {
+    const userDocRef = db.collection('users').doc(userId);
+    try {
+        await userDocRef.update(data);
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        throw error;
+    }
+};
+
+/**
  * Updates a user's role and performs any necessary side effects,
  * such as creating a service provider profile.
  * @param userId - The ID of the user to update.
@@ -145,15 +160,17 @@ export const addMessageToConversation = async (conversationId: string, message: 
   const batch = db.batch();
   
   const messageRef = messagesCollection.doc();
-
+  
   const messageData: any = {
       ...message,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
-  // Only include propertyIds if it's defined and not empty
-  if (message.propertyIds && message.propertyIds.length > 0) {
-      messageData.propertyIds = message.propertyIds;
+  // Firestore forbids `undefined` values. If propertyIds is not a valid, non-empty array,
+  // delete the key to prevent runtime errors. This handles cases where Gemini
+  // does not return property suggestions.
+  if (!messageData.propertyIds || !Array.isArray(messageData.propertyIds) || messageData.propertyIds.length === 0) {
+    delete messageData.propertyIds;
   }
 
   batch.set(messageRef, messageData);
@@ -164,6 +181,7 @@ export const addMessageToConversation = async (conversationId: string, message: 
   
   await batch.commit();
 };
+
 
 /**
  * Fetches messages for a given conversation, ordered by timestamp.
@@ -372,10 +390,11 @@ export const addProperty = async (propertyData: Partial<Property>): Promise<stri
  */
 export const updateProperty = async (propertyId: string, propertyData: Partial<Property>): Promise<void> => {
     try {
-        await db.collection('properties').doc(propertyId).update({
+        // Use set with merge:true to create the document if it doesn't exist (e.g., when saving a dummy property for the first time)
+        await db.collection('properties').doc(propertyId).set({
             ...propertyData,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+        }, { merge: true });
     } catch (error) {
         console.error("Error updating property:", error);
         throw new Error("Failed to update property in Firestore.");
